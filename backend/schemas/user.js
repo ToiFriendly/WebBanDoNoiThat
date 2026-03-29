@@ -113,22 +113,43 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-userSchema.pre("save", function (next) {
-  if (this.isModified("password")) {
-    const salt = bcrypt.genSaltSync(10);
-    this.password = bcrypt.hashSync(this.password, salt);
-  }
+userSchema.methods.comparePassword = function (plainPassword) {
+  return bcrypt.compare(plainPassword, this.password);
+};
 
-  next();
+userSchema.pre("save", async function () {
+  if (this.isModified("password")) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
 });
 
-userSchema.pre("findOneAndUpdate", function (next) {
-  if (this._update.password) {
-    const salt = bcrypt.genSaltSync(10);
-    this._update.password = bcrypt.hashSync(this._update.password, salt);
-  }
+userSchema.pre("findOneAndUpdate", async function () {
+  const update = this.getUpdate();
+  const rawPassword = update?.password || update?.$set?.password;
 
-  next();
+  if (rawPassword) {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(rawPassword, salt);
+
+    if (update.password) {
+      update.password = hashedPassword;
+    }
+
+    if (update.$set?.password) {
+      update.$set.password = hashedPassword;
+    }
+  }
+});
+
+userSchema.set("toJSON", {
+  transform: function (_doc, ret) {
+    delete ret.password;
+    delete ret.forgotPasswordToken;
+    delete ret.forgotPasswordTokenExp;
+    delete ret.__v;
+    return ret;
+  }
 });
 
 module.exports = mongoose.model("user", userSchema);
