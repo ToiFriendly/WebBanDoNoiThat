@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { clearStoredSession, saveStoredSession } from "../../utils/storefront";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
@@ -61,7 +62,7 @@ function Login() {
       );
       setSession(data);
       setFeedback("Dang nhap thanh cong! Chao mung ban quay tro lai.");
-      localStorage.setItem("auth_demo_session", JSON.stringify(data));
+      saveStoredSession(data);
       setLoginForm(loginInitialState);
       resetGoogleFlow("login");
       navigate("/");
@@ -87,7 +88,7 @@ function Login() {
       );
       setSession(data);
       setFeedback("Dang ky thanh cong! Hay bat dau mua sam ngay.");
-      localStorage.setItem("auth_demo_session", JSON.stringify(data));
+      saveStoredSession(data);
       setRegisterForm(registerInitialState);
       resetGoogleFlow("login");
     } catch (error) {
@@ -229,7 +230,7 @@ function Login() {
 
       setSession(data);
       setFeedback("Dang nhap Google thanh cong.");
-      localStorage.setItem("auth_demo_session", JSON.stringify(data));
+      saveStoredSession(data);
       resetGoogleFlow("login");
       navigate("/");
     } catch (error) {
@@ -252,7 +253,7 @@ function Login() {
   }
 
   function handleLogout() {
-    localStorage.removeItem("auth_demo_session");
+    clearStoredSession();
     setSession(null);
     resetGoogleFlow("login");
     setFeedback("Ban da dang xuat.");
