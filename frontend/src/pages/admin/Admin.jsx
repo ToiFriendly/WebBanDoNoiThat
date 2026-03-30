@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { clearStoredSession } from "../../utils/storefront";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
@@ -42,7 +43,7 @@ function getStoredSession() {
   try {
     const rawSession = localStorage.getItem("auth_demo_session");
     return rawSession ? JSON.parse(rawSession) : null;
-  } catch (_error) {
+  } catch {
     return null;
   }
 }
@@ -118,7 +119,28 @@ function Admin() {
       return;
     }
 
-    loadAdminData();
+    async function syncAdminData() {
+      try {
+        setLoading(true);
+        const config = headers(session.token);
+        const [categoryResponse, productResponse] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/admin/categories`, config),
+          axios.get(`${API_BASE_URL}/api/admin/products`, config),
+        ]);
+
+        setCategories(categoryResponse.data.categories || []);
+        setProducts(productResponse.data.products || []);
+      } catch (error) {
+        setFeedback(
+          error.response?.data?.message ||
+            "Khong the tai du lieu quan tri luc nay.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    syncAdminData();
   }, [session]);
 
   async function loadAdminData() {
@@ -416,7 +438,7 @@ function Admin() {
   }
 
   function handleLogout() {
-    localStorage.removeItem("auth_demo_session");
+    clearStoredSession();
     navigate("/login");
   }
 
