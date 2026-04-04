@@ -6,7 +6,6 @@ export default function LoginPanel({
   onSubmit,
   onSwitchToRegister,
   onForgotPassword,
-  forgotPasswordHint,
   loading,
   googleLoading,
   googleButtonReady,
@@ -63,12 +62,6 @@ export default function LoginPanel({
           Quen mat khau?
         </button>
       </div>
-
-      {forgotPasswordHint ? (
-        <div className="rounded-[18px] border border-[#eadbc7] bg-[#f8efe2] px-4 py-3 text-sm leading-7 text-[#7a5b47]">
-          {forgotPasswordHint}
-        </div>
-      ) : null}
 
       <button
         type="button"

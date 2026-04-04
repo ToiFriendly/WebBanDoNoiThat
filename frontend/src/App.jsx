@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Admin from "./pages/admin/Admin";
 import Cart from "./pages/cart/Cart";
 import CategoryProducts from "./pages/category-products/CategoryProducts";
+import ForgotPassword from "./pages/login/ForgotPassword";
 import Login from "./pages/login/Login";
 import Home from "./pages/home/Home";
 import MomoReturn from "./pages/momo-return/MomoReturn";
@@ -13,6 +14,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/quen-mat-khau" element={<ForgotPassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/gio-hang" element={<Cart />} />
         <Route path="/thanh-toan/momo" element={<MomoReturn />} />

@@ -29,7 +29,6 @@ function Login() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleButtonReady, setGoogleButtonReady] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [forgotPasswordHint, setForgotPasswordHint] = useState("");
   const [session, setSession] = useState(null);
   const [googleChallenge, setGoogleChallenge] = useState(null);
   const [googleCredential, setGoogleCredential] = useState("");
@@ -41,7 +40,6 @@ function Login() {
     setGoogleChallenge(null);
     setGoogleCredential("");
     setOtpForm(otpInitialState);
-    setForgotPasswordHint("");
   }
 
   function updateLoginForm(field, value) {
@@ -278,12 +276,6 @@ function Login() {
     setFeedback("Ban da dang xuat.");
   }
 
-  function handleForgotPassword() {
-    setForgotPasswordHint(
-      "Luong quen mat khau se duoc noi voi xac minh OTP qua email trong buoc tiep theo.",
-    );
-  }
-
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(250,192,106,0.34),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(161,98,7,0.1),transparent_28%),linear-gradient(135deg,#f6efe4_0%,#efe4d3_42%,#f9f5ee_100%)] px-4 py-6 text-[#2f241f] md:px-8 md:py-8">
       <div className="mx-auto grid max-w-[1320px] gap-6 xl:min-h-[calc(100vh-4rem)] xl:grid-cols-[minmax(0,1.1fr)_minmax(420px,540px)] xl:items-center">
@@ -324,8 +316,7 @@ function Login() {
                 updateForm={updateLoginForm}
                 onSubmit={handleLogin}
                 onSwitchToRegister={() => resetGoogleFlow("register")}
-                onForgotPassword={handleForgotPassword}
-                forgotPasswordHint={forgotPasswordHint}
+                onForgotPassword={() => navigate("/quen-mat-khau")}
                 loading={loading}
                 googleLoading={googleLoading}
                 googleButtonReady={googleButtonReady}

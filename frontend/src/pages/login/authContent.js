@@ -88,6 +88,30 @@ export const heroContentByMode = {
       },
     ],
   },
+  forgot: {
+    eyebrow: "Khoi phuc truy cap tai khoan",
+    title: ["Dat lai", "mat khau", "mot cach", "an toan."],
+    description: [
+      "Luong quen mat khau duoc tach rieng de giu cac buoc",
+      "xac minh, nhap OTP va cap nhat mat khau ro rang hon.",
+    ],
+    cards: [
+      {
+        title: "OTP gui qua email",
+        lines: [
+          "Nhap email dang ky de nhan ma OTP dat lai",
+          "mat khau trong mot luong ngan gon, de theo doi.",
+        ],
+      },
+      {
+        title: "Quay lai nhanh hon",
+        lines: [
+          "Sau khi cap nhat mat khau moi, ban co the tro lai",
+          "man dang nhap ngay ma khong can thao tac lai tu dau.",
+        ],
+      },
+    ]
+  },
 };
 
 export function inputClassName() {

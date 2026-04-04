@@ -90,19 +90,25 @@ async function verifyGoogleCredential(credential) {
   };
 }
 
-async function sendOtpEmail({ email, otp }) {
+async function sendOtpEmail({
+  email,
+  otp,
+  subject = "Ma OTP dang nhap",
+  heading = "Xac minh dang nhap Google",
+  intro = "Su dung ma OTP ben duoi de hoan tat dang nhap.",
+  footer = "Neu ban khong yeu cau dang nhap, hay bo qua email nay."
+}) {
   const otpExpiryMinutes = getOtpExpiryMinutes();
-  const subject = "Ma OTP dang nhap";
   const text = `Ma OTP cua ban la ${otp}. Ma se het han sau ${otpExpiryMinutes} phut.`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #2f241f;">
-      <h2 style="margin-bottom: 12px;">Xac minh dang nhap Google</h2>
-      <p style="margin-bottom: 16px;">Su dung ma OTP ben duoi de hoan tat dang nhap.</p>
+      <h2 style="margin-bottom: 12px;">${heading}</h2>
+      <p style="margin-bottom: 16px;">${intro}</p>
       <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; background: #f6efe4; padding: 16px 20px; border-radius: 16px; display: inline-block;">
         ${otp}
       </div>
       <p style="margin-top: 16px;">Ma co hieu luc trong ${otpExpiryMinutes} phut.</p>
-      <p style="margin-top: 16px; color: #6b564b;">Neu ban khong yeu cau dang nhap, hay bo qua email nay.</p>
+      <p style="margin-top: 16px; color: #6b564b;">${footer}</p>
     </div>
   `;
 
@@ -366,6 +372,133 @@ async function requestGoogleOtp(req, res) {
   }
 }
 
+async function requestForgotPasswordOtp(req, res) {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        message: "Vui long nhap email tai khoan."
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "Khong tim thay tai khoan voi email nay."
+      });
+    }
+
+    if (user.status !== "active") {
+      return res.status(403).json({
+        message: "Tai khoan hien khong the dat lai mat khau."
+      });
+    }
+
+    const otp = generateOtp();
+    const otpHash = await bcrypt.hash(otp, 10);
+    const expiresAt = new Date(
+      Date.now() + getOtpExpiryMinutes() * 60 * 1000
+    );
+
+    user.forgotPasswordToken = otpHash;
+    user.forgotPasswordTokenExp = expiresAt;
+    await user.save();
+
+    try {
+      await sendOtpEmail({
+        email: normalizedEmail,
+        otp,
+        subject: "Ma OTP dat lai mat khau",
+        heading: "Dat lai mat khau",
+        intro: "Su dung ma OTP ben duoi de xac minh yeu cau dat lai mat khau.",
+        footer: "Neu ban khong yeu cau dat lai mat khau, hay bo qua email nay."
+      });
+    } catch (error) {
+      user.forgotPasswordToken = undefined;
+      user.forgotPasswordTokenExp = undefined;
+      await user.save();
+      throw error;
+    }
+
+    return res.status(200).json({
+      message: `Da gui OTP den ${maskEmail(normalizedEmail)}.`,
+      email: normalizedEmail,
+      maskedEmail: maskEmail(normalizedEmail),
+      expiresInMinutes: getOtpExpiryMinutes()
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Khong the khoi tao luong quen mat khau.",
+      error: error.message
+    });
+  }
+}
+
+async function resetForgotPassword(req, res) {
+  try {
+    const { email, otp, password } = req.body;
+
+    if (!email || !otp || !password) {
+      return res.status(400).json({
+        message: "Thong tin dat lai mat khau khong du."
+      });
+    }
+
+    if (String(password).length < 6) {
+      return res.status(400).json({
+        message: "Mat khau moi phai co it nhat 6 ky tu."
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user || !user.forgotPasswordToken || !user.forgotPasswordTokenExp) {
+      return res.status(404).json({
+        message: "Khong tim thay yeu cau dat lai mat khau hop le."
+      });
+    }
+
+    if (user.forgotPasswordTokenExp.getTime() < Date.now()) {
+      user.forgotPasswordToken = undefined;
+      user.forgotPasswordTokenExp = undefined;
+      await user.save();
+
+      return res.status(410).json({
+        message: "Ma OTP da het han. Vui long yeu cau ma moi."
+      });
+    }
+
+    const isOtpValid = await bcrypt.compare(
+      String(otp).trim(),
+      user.forgotPasswordToken
+    );
+
+    if (!isOtpValid) {
+      return res.status(401).json({
+        message: "Ma OTP khong dung."
+      });
+    }
+
+    user.password = String(password);
+    user.forgotPasswordToken = undefined;
+    user.forgotPasswordTokenExp = undefined;
+    await user.save();
+
+    return res.status(200).json({
+      message: "Dat lai mat khau thanh cong."
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Khong the dat lai mat khau.",
+      error: error.message
+    });
+  }
+}
+
 async function verifyGoogleOtp(req, res) {
   try {
     const { challengeId, otp } = req.body;
@@ -436,5 +569,7 @@ module.exports = {
   getMe,
   getAdminAccess,
   requestGoogleOtp,
-  verifyGoogleOtp
+  verifyGoogleOtp,
+  requestForgotPasswordOtp,
+  resetForgotPassword
 };
