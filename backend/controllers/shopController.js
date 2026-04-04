@@ -750,6 +750,39 @@ async function checkout(req, res, next) {
   }
 }
 
+async function listOrders(req, res, next) {
+  try {
+    const validStatuses = ["pending", "confirmed", "shipping", "completed", "cancelled"];
+    const requestedStatus =
+      typeof req.query.status === "string" ? req.query.status.trim() : "";
+    const orderFilter = {
+      user: req.user._id,
+      isDeleted: false
+    };
+
+    if (validStatuses.includes(requestedStatus)) {
+      orderFilter.orderStatus = requestedStatus;
+    }
+
+    const orders = await Order.find(orderFilter)
+      .sort({ placedAt: -1, createdAt: -1 })
+      .populate({
+        path: "items",
+        populate: {
+          path: "product",
+          select: "name slug images"
+        }
+      });
+
+    return res.status(200).json({
+      orders: orders.map(mapOrder),
+      total: orders.length
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function getOrderDetail(req, res, next) {
   try {
     const order = await loadOrderByCode(req.params.orderCode, req.user._id);
@@ -788,6 +821,7 @@ module.exports = {
   checkout,
   clearCartItems,
   getCart,
+  listOrders,
   getOrderDetail,
   handleMomoPaymentResult,
   removeCartItem,
