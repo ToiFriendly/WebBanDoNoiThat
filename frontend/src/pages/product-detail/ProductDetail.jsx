@@ -1,3 +1,4 @@
+import "./ProductDetail.css";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import StoreHeader from "../../components/StoreHeader";
@@ -6,22 +7,23 @@ import {
   emitCartChanged,
   fetchJson,
   formatCurrency,
-  getDisplayImage,
   getStoredSessionUser,
   requestAuthJson,
 } from "../../utils/storefront";
 
-function InfoBlock({ label, value }) {
-  if (!value) {
-    return null;
-  }
+function getValidImages(images = []) {
+  return images.filter(
+    (img) => img && typeof img === "string" && !img.includes("placehold.co"),
+  );
+}
+
+function SpecItem({ label, value }) {
+  if (!value) return null;
 
   return (
-    <div className="rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/70 p-4">
-      <div className="text-xs tracking-[0.12em] text-[#8b6243] uppercase">
-        {label}
-      </div>
-      <div className="mt-2 text-base font-semibold">{value}</div>
+    <div className="pd-spec">
+      <div className="pd-spec__label">{label}</div>
+      <div className="pd-spec__value">{value}</div>
     </div>
   );
 }
@@ -34,7 +36,8 @@ function ProductDetail() {
   const [error, setError] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [cartSubmitting, setCartSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState("");
+  const [feedback, setFeedback] = useState({ type: "", message: "" });
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -43,17 +46,18 @@ function ProductDetail() {
       try {
         setLoading(true);
         setError("");
-        setFeedback("");
+        setFeedback({ type: "", message: "" });
 
         const data = await fetchJson(`${API_BASE_URL}/api/home/products/${slug}`);
 
         if (isMounted) {
           setProduct(data.product || null);
           setQuantity(1);
+          setActiveImageIndex(0);
         }
       } catch (loadError) {
         if (isMounted) {
-          setError(loadError.message || "Khong the tai chi tiet san pham.");
+          setError(loadError.message || "Không thể tải chi tiết sản phẩm.");
         }
       } finally {
         if (isMounted) {
@@ -63,23 +67,40 @@ function ProductDetail() {
     }
 
     loadProduct();
+    window.scrollTo({ top: 0, behavior: "smooth" });
 
     return () => {
       isMounted = false;
     };
   }, [slug]);
 
-  const image = product ? getDisplayImage(product.images) : "";
+  const validImages = product ? getValidImages(product.images) : [];
+  const activeImage = validImages[activeImageIndex] || "";
   const dimensions = product?.dimensions || {};
   const dimensionText =
     dimensions.length || dimensions.width || dimensions.height
-      ? `${dimensions.length || 0} x ${dimensions.width || 0} x ${dimensions.height || 0} ${dimensions.unit || "cm"}`
+      ? `${dimensions.length || 0} × ${dimensions.width || 0} × ${dimensions.height || 0} ${dimensions.unit || "cm"}`
       : "";
 
+  const hasDiscount =
+    product?.compareAtPrice && product.compareAtPrice > product.price;
+  const discountPercent = hasDiscount
+    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
+    : 0;
+
+  const specs = product
+    ? [
+        { label: "Danh mục", value: product.category?.name },
+        { label: "SKU", value: product.sku },
+        { label: "Chất liệu", value: product.material },
+        { label: "Phong cách", value: product.style },
+        { label: "Màu sắc", value: product.color },
+        { label: "Kích thước", value: dimensionText },
+      ].filter((s) => s.value)
+    : [];
+
   async function handleAddToCart() {
-    if (!product) {
-      return;
-    }
+    if (!product) return;
 
     if (!getStoredSessionUser()) {
       navigate("/login");
@@ -88,182 +109,311 @@ function ProductDetail() {
 
     try {
       setCartSubmitting(true);
-      setFeedback("");
+      setFeedback({ type: "", message: "" });
 
       await requestAuthJson(`${API_BASE_URL}/api/shop/cart/items`, {
         method: "POST",
-        body: {
-          productId: product._id,
-          quantity,
-        },
+        body: { productId: product._id, quantity },
       });
 
       emitCartChanged();
-      setFeedback("Da them san pham vao gio hang.");
+      setFeedback({
+        type: "success",
+        message: `Đã thêm ${quantity} sản phẩm vào giỏ hàng!`,
+      });
     } catch (cartError) {
-      setFeedback(cartError.message || "Khong the them vao gio hang.");
+      setFeedback({
+        type: "error",
+        message: cartError.message || "Không thể thêm vào giỏ hàng.",
+      });
     } finally {
       setCartSubmitting(false);
     }
   }
 
   return (
-    <main className="min-h-screen px-3 py-4 text-[#2f241f] md:px-6 md:py-6">
-      <section className="mx-auto w-full max-w-[1180px] rounded-[32px] border border-[rgba(95,63,42,0.12)] bg-[rgba(255,251,245,0.82)] p-5 shadow-[0_20px_60px_rgba(79,52,35,0.08)] md:p-6">
+    <main className="pd-page">
+      <section className="pd-container">
         <StoreHeader />
 
-        <div className="mb-6 flex flex-wrap gap-3 text-sm">
-          <Link className="rounded-full bg-white/75 px-4 py-2 no-underline" to="/">
-            Trang chu
-          </Link>
-          {product?.category?.slug ? (
-            <Link
-              className="rounded-full bg-white/75 px-4 py-2 no-underline"
-              to={`/danh-muc/${product.category.slug}`}
-            >
-              {product.category.name}
-            </Link>
-          ) : null}
-        </div>
+        {/* Breadcrumb */}
+        <nav className="pd-breadcrumb">
+          <Link to="/">Trang chủ</Link>
+          <svg className="pd-breadcrumb__sep" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+          <Link to="/san-pham">Sản phẩm</Link>
+          {product?.category?.slug && (
+            <>
+              <svg className="pd-breadcrumb__sep" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+              <Link to={`/danh-muc/${product.category.slug}`}>
+                {product.category.name}
+              </Link>
+            </>
+          )}
+          {product && (
+            <>
+              <svg className="pd-breadcrumb__sep" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+              <span className="pd-breadcrumb__current">{product.name}</span>
+            </>
+          )}
+        </nav>
 
+        {/* States */}
         {loading ? (
-          <div className="rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 p-6">
-            Dang tai chi tiet san pham...
+          <div className="pd-loading">
+            <div className="pd-loading__spinner" />
+            <p>Đang tải chi tiết sản phẩm...</p>
           </div>
         ) : error ? (
-          <div className="rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 p-6 text-[#8a3d2f]">
-            {error}
+          <div className="pd-error">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <p>{error}</p>
+            <Link
+              to="/san-pham"
+              style={{
+                padding: "0.6rem 1.5rem",
+                borderRadius: "999px",
+                background: "#2f241f",
+                color: "#fff8f0",
+                textDecoration: "none",
+                fontWeight: 600,
+                fontSize: "0.9rem",
+              }}
+            >
+              Quay lại danh sách
+            </Link>
           </div>
         ) : product ? (
-          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="overflow-hidden rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/75">
-              <div className="aspect-[4/3] overflow-hidden">
-                {image ? (
+          <div className="pd-main">
+            {/* ===== LEFT: Gallery ===== */}
+            <div className="pd-gallery">
+              <div className="pd-gallery__main">
+                {activeImage ? (
                   <img
-                    className="block h-full w-full object-cover"
-                    src={image}
+                    className="pd-gallery__main-img"
+                    src={activeImage}
                     alt={product.name}
                   />
                 ) : (
-                  <div className="flex h-full w-full items-end bg-[linear-gradient(135deg,rgba(164,116,78,0.28),rgba(245,222,194,0.7))] p-6">
-                    <span className="rounded-full bg-white/75 px-3 py-2 text-sm font-bold">
-                      {product.category?.name || "San pham"}
-                    </span>
+                  <div className="pd-gallery__placeholder">
+                    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
                   </div>
                 )}
+
+                {/* Badges */}
+                <div className="pd-gallery__badge">
+                  {product.isFeatured && (
+                    <span className="pd-gallery__badge-item pd-gallery__badge-featured">
+                      ★ Nổi bật
+                    </span>
+                  )}
+                  <span
+                    className={`pd-gallery__badge-item ${
+                      product.quantityInStock > 0
+                        ? "pd-gallery__badge-stock"
+                        : "pd-gallery__badge-out"
+                    }`}
+                  >
+                    {product.quantityInStock > 0
+                      ? `Còn ${product.quantityInStock} sản phẩm`
+                      : "Tạm hết hàng"}
+                  </span>
+                </div>
               </div>
+
+              {/* Thumbnails */}
+              {validImages.length > 1 && (
+                <div className="pd-gallery__thumbs">
+                  {validImages.map((img, index) => (
+                    <button
+                      key={img}
+                      type="button"
+                      className={`pd-gallery__thumb ${
+                        index === activeImageIndex ? "pd-gallery__thumb--active" : ""
+                      }`}
+                      onClick={() => setActiveImageIndex(index)}
+                    >
+                      <img src={img} alt={`${product.name} ${index + 1}`} />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="grid gap-5">
-              <div>
-                <p className="text-xs tracking-[0.16em] text-[#8b6243] uppercase">
-                  Chi tiet san pham
-                </p>
-                <h1 className="mt-3 text-4xl font-semibold md:text-5xl">
-                  {product.name}
-                </h1>
-                <p className="mt-4 text-lg leading-8 text-[#5c4a40]">
-                  {product.shortDescription || "San pham nay chua co mo ta ngan."}
-                </p>
-              </div>
+            {/* ===== RIGHT: Info ===== */}
+            <div className="pd-info">
+              {/* Category */}
+              {product.category?.slug && (
+                <Link
+                  className="pd-info__category"
+                  to={`/danh-muc/${product.category.slug}`}
+                >
+                  <span className="pd-info__category-dot" />
+                  {product.category.name}
+                </Link>
+              )}
 
-              <div className="flex flex-wrap items-center gap-3">
-                <strong className="text-3xl">{formatCurrency(product.price)}</strong>
-                {product.compareAtPrice > product.price ? (
-                  <span className="text-lg text-[#8b6243] line-through">
-                    {formatCurrency(product.compareAtPrice)}
-                  </span>
-                ) : null}
-                <span className="rounded-full bg-[#f3e5d7] px-4 py-2 text-sm font-semibold">
-                  {product.quantityInStock > 0 ? "Con hang" : "Tam het hang"}
+              {/* Title */}
+              <h1 className="pd-info__title">{product.name}</h1>
+
+              {/* Short Description */}
+              {product.shortDescription && (
+                <p className="pd-info__short-desc">{product.shortDescription}</p>
+              )}
+
+              {/* Price */}
+              <div className="pd-price">
+                <span className="pd-price__current">
+                  {formatCurrency(product.price)}
                 </span>
+                {hasDiscount && (
+                  <>
+                    <span className="pd-price__original">
+                      {formatCurrency(product.compareAtPrice)}
+                    </span>
+                    <span className="pd-price__discount">-{discountPercent}%</span>
+                  </>
+                )}
               </div>
 
-              <div className="rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/70 p-5">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <div className="text-sm text-[#6a564b]">So luong muon mua</div>
-                    <div className="mt-3 flex items-center gap-3">
-                      <button
-                        type="button"
-                        className="rounded-full border border-[rgba(95,63,42,0.14)] bg-white/80 px-4 py-2"
-                        onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                        disabled={cartSubmitting || product.quantityInStock <= 0}
-                      >
-                        -
-                      </button>
-                      <input
-                        className="w-24 rounded-full border border-[rgba(95,63,42,0.14)] bg-white/80 px-4 py-2 text-center outline-none"
-                        type="number"
-                        min="1"
-                        max={Math.max(1, product.quantityInStock)}
-                        value={quantity}
-                        onChange={(event) =>
-                          setQuantity(Math.max(1, Number(event.target.value) || 1))
-                        }
-                        disabled={cartSubmitting || product.quantityInStock <= 0}
-                      />
-                      <button
-                        type="button"
-                        className="rounded-full border border-[rgba(95,63,42,0.14)] bg-white/80 px-4 py-2"
-                        onClick={() => setQuantity((prev) => prev + 1)}
-                        disabled={cartSubmitting || product.quantityInStock <= 0}
-                      >
-                        +
-                      </button>
-                    </div>
+              <hr className="pd-divider" />
+
+              {/* Add to Cart */}
+              <div className="pd-cart">
+                <div className="pd-cart__label">Số lượng</div>
+                <div className="pd-cart__controls">
+                  <div className="pd-cart__qty">
+                    <button
+                      type="button"
+                      className="pd-cart__qty-btn"
+                      onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                      disabled={cartSubmitting || product.quantityInStock <= 0}
+                    >
+                      −
+                    </button>
+                    <input
+                      className="pd-cart__qty-input"
+                      type="number"
+                      min="1"
+                      max={Math.max(1, product.quantityInStock)}
+                      value={quantity}
+                      onChange={(e) =>
+                        setQuantity(Math.max(1, Number(e.target.value) || 1))
+                      }
+                      disabled={cartSubmitting || product.quantityInStock <= 0}
+                    />
+                    <button
+                      type="button"
+                      className="pd-cart__qty-btn"
+                      onClick={() => setQuantity((prev) => prev + 1)}
+                      disabled={cartSubmitting || product.quantityInStock <= 0}
+                    >
+                      +
+                    </button>
                   </div>
 
                   <button
                     type="button"
-                    className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#2f241f] px-6 font-bold text-[#fff8f0] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="pd-cart__add-btn"
                     onClick={handleAddToCart}
                     disabled={cartSubmitting || product.quantityInStock <= 0}
                   >
-                    {cartSubmitting ? "Dang them..." : "Them vao gio hang"}
+                    {cartSubmitting ? (
+                      <>
+                        <span className="pd-loading__spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
+                        Đang thêm...
+                      </>
+                    ) : (
+                      <>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="9" cy="21" r="1" />
+                          <circle cx="20" cy="21" r="1" />
+                          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                        </svg>
+                        Thêm vào giỏ hàng
+                      </>
+                    )}
                   </button>
                 </div>
 
-                <p className="mt-4 text-sm leading-6 text-[#6a564b]">
-                  He thong chi kiem tra ton kho khi them vao gio. Kho se chi bi tru
-                  trong transaction luc Dat hang.
-                </p>
-
-                {feedback ? (
-                  <div className="mt-4 rounded-2xl bg-[#f5ebde] px-4 py-3 text-[#734d36]">
-                    {feedback}
+                {feedback.message && (
+                  <div
+                    className={`pd-cart__feedback ${
+                      feedback.type === "success"
+                        ? "pd-cart__feedback--success"
+                        : "pd-cart__feedback--error"
+                    }`}
+                  >
+                    {feedback.type === "success" ? "✓ " : "✕ "}
+                    {feedback.message}
                   </div>
-                ) : null}
+                )}
               </div>
 
-              <div className="grid gap-3 md:grid-cols-2">
-                <InfoBlock label="Danh muc" value={product.category?.name} />
-                <InfoBlock label="SKU" value={product.sku} />
-                <InfoBlock label="Chat lieu" value={product.material} />
-                <InfoBlock label="Phong cach" value={product.style} />
-                <InfoBlock label="Mau sac" value={product.color} />
-                <InfoBlock label="Kich thuoc" value={dimensionText} />
-              </div>
+              {/* Specs */}
+              {specs.length > 0 && (
+                <>
+                  <hr className="pd-divider" />
+                  <div className="pd-specs">
+                    {specs.map((spec) => (
+                      <SpecItem
+                        key={spec.label}
+                        label={spec.label}
+                        value={spec.value}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
 
-              <div className="rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/70 p-5">
-                <h2 className="text-2xl font-semibold">Mo ta chi tiet</h2>
-                <p className="mt-4 leading-8 text-[#5c4a40]">
-                  {product.description || "San pham nay chua co mo ta chi tiet."}
-                </p>
-              </div>
+              {/* Description */}
+              {product.description && (
+                <>
+                  <hr className="pd-divider" />
+                  <div className="pd-description">
+                    <h2 className="pd-description__title">
+                      <span className="pd-description__title-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                        </svg>
+                      </span>
+                      Mô tả chi tiết
+                    </h2>
+                    <div className="pd-description__body">{product.description}</div>
+                  </div>
+                </>
+              )}
 
-              {product.tags?.length ? (
-                <div className="flex flex-wrap gap-3">
+              {/* Tags */}
+              {product.tags?.length > 0 && (
+                <div className="pd-tags">
                   {product.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-[rgba(95,63,42,0.14)] bg-white/80 px-4 py-2 text-sm"
-                    >
+                    <span key={tag} className="pd-tag">
+                      <svg className="pd-tag__icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                        <line x1="7" y1="7" x2="7.01" y2="7" />
+                      </svg>
                       {tag}
                     </span>
                   ))}
                 </div>
-              ) : null}
+              )}
             </div>
           </div>
         ) : null}
