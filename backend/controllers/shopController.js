@@ -690,7 +690,7 @@ async function checkout(req, res, next) {
 
     if (paymentMethod !== "momo") {
       return res.status(201).json({
-        message: "Dat hang thanh cong.",
+        message: "Đặt hàng thành công.",
         order: mapOrder(order)
       });
     }
