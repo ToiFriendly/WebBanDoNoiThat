@@ -1,14 +1,11 @@
 import "./ProductDetail.css";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import StoreHeader from "../../components/StoreHeader";
 import {
   API_BASE_URL,
-  emitCartChanged,
   fetchJson,
   formatCurrency,
-  getStoredSessionUser,
-  requestAuthJson,
 } from "../../utils/storefront";
 
 function getValidImages(images = []) {
@@ -29,14 +26,10 @@ function SpecItem({ label, value }) {
 }
 
 function ProductDetail() {
-  const navigate = useNavigate();
   const { slug } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [cartSubmitting, setCartSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState({ type: "", message: "" });
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
@@ -46,13 +39,11 @@ function ProductDetail() {
       try {
         setLoading(true);
         setError("");
-        setFeedback({ type: "", message: "" });
 
         const data = await fetchJson(`${API_BASE_URL}/api/home/products/${slug}`);
 
         if (isMounted) {
           setProduct(data.product || null);
-          setQuantity(1);
           setActiveImageIndex(0);
         }
       } catch (loadError) {
@@ -98,38 +89,6 @@ function ProductDetail() {
         { label: "Kích thước", value: dimensionText },
       ].filter((s) => s.value)
     : [];
-
-  async function handleAddToCart() {
-    if (!product) return;
-
-    if (!getStoredSessionUser()) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      setCartSubmitting(true);
-      setFeedback({ type: "", message: "" });
-
-      await requestAuthJson(`${API_BASE_URL}/api/shop/cart/items`, {
-        method: "POST",
-        body: { productId: product._id, quantity },
-      });
-
-      emitCartChanged();
-      setFeedback({
-        type: "success",
-        message: `Đã thêm ${quantity} sản phẩm vào giỏ hàng!`,
-      });
-    } catch (cartError) {
-      setFeedback({
-        type: "error",
-        message: cartError.message || "Không thể thêm vào giỏ hàng.",
-      });
-    } finally {
-      setCartSubmitting(false);
-    }
-  }
 
   return (
     <main className="pd-page">
@@ -291,76 +250,30 @@ function ProductDetail() {
 
               <hr className="pd-divider" />
 
-              {/* Add to Cart */}
-              <div className="pd-cart">
-                <div className="pd-cart__label">Số lượng</div>
-                <div className="pd-cart__controls">
-                  <div className="pd-cart__qty">
-                    <button
-                      type="button"
-                      className="pd-cart__qty-btn"
-                      onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                      disabled={cartSubmitting || product.quantityInStock <= 0}
-                    >
-                      −
-                    </button>
-                    <input
-                      className="pd-cart__qty-input"
-                      type="number"
-                      min="1"
-                      max={Math.max(1, product.quantityInStock)}
-                      value={quantity}
-                      onChange={(e) =>
-                        setQuantity(Math.max(1, Number(e.target.value) || 1))
-                      }
-                      disabled={cartSubmitting || product.quantityInStock <= 0}
-                    />
-                    <button
-                      type="button"
-                      className="pd-cart__qty-btn"
-                      onClick={() => setQuantity((prev) => prev + 1)}
-                      disabled={cartSubmitting || product.quantityInStock <= 0}
-                    >
-                      +
-                    </button>
+              <div className="pd-purchase">
+                <div className="pd-purchase__eyebrow">Tình trạng sản phẩm</div>
+                <div className="pd-purchase__body">
+                  <div>
+                    <div className="pd-purchase__stock">
+                      {product.quantityInStock > 0
+                        ? `Còn ${product.quantityInStock} sản phẩm trong kho`
+                        : "Sản phẩm hiện đang tạm hết hàng"}
+                    </div>
+                    <p className="pd-purchase__note">
+                      Luồng giỏ hàng đã được gỡ khỏi giao diện này. Bạn có thể tiếp
+                      tục xem thông tin sản phẩm hoặc mở khu vực theo dõi đơn hàng.
+                    </p>
                   </div>
 
-                  <button
-                    type="button"
-                    className="pd-cart__add-btn"
-                    onClick={handleAddToCart}
-                    disabled={cartSubmitting || product.quantityInStock <= 0}
-                  >
-                    {cartSubmitting ? (
-                      <>
-                        <span className="pd-loading__spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
-                        Đang thêm...
-                      </>
-                    ) : (
-                      <>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="9" cy="21" r="1" />
-                          <circle cx="20" cy="21" r="1" />
-                          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-                        </svg>
-                        Thêm vào giỏ hàng
-                      </>
-                    )}
-                  </button>
+                  <div className="pd-purchase__actions">
+                    <Link className="pd-purchase__primary" to="/san-pham">
+                      Xem thêm sản phẩm
+                    </Link>
+                    <Link className="pd-purchase__secondary" to="/theo-doi-don">
+                      Theo dõi đơn hàng
+                    </Link>
+                  </div>
                 </div>
-
-                {feedback.message && (
-                  <div
-                    className={`pd-cart__feedback ${
-                      feedback.type === "success"
-                        ? "pd-cart__feedback--success"
-                        : "pd-cart__feedback--error"
-                    }`}
-                  >
-                    {feedback.type === "success" ? "✓ " : "✕ "}
-                    {feedback.message}
-                  </div>
-                )}
               </div>
 
               {/* Specs */}

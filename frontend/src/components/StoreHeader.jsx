@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { API_BASE_URL, getStoredSessionUser, requestAuthJson } from "../utils/storefront";
+import { getStoredSessionUser } from "../utils/storefront";
 
 function StoreHeader() {
   const location = useLocation();
   const [sessionUser, setSessionUser] = useState(() => getStoredSessionUser());
-  const [cartCount, setCartCount] = useState(0);
 
   function getNavClass(pathname) {
     const isActive = location.pathname === pathname;
@@ -18,33 +17,19 @@ function StoreHeader() {
   }
 
   useEffect(() => {
-    async function syncHeaderState() {
+    function syncHeaderState() {
       const nextUser = getStoredSessionUser();
       setSessionUser(nextUser);
-
-      if (!nextUser || nextUser.role !== "customer") {
-        setCartCount(0);
-        return;
-      }
-
-      try {
-        const data = await requestAuthJson(`${API_BASE_URL}/api/shop/cart`);
-        setCartCount(data?.cart?.totalQuantity || 0);
-      } catch {
-        setCartCount(0);
-      }
     }
 
     syncHeaderState();
 
     window.addEventListener("storage", syncHeaderState);
     window.addEventListener("auth-session-changed", syncHeaderState);
-    window.addEventListener("cart-changed", syncHeaderState);
 
     return () => {
       window.removeEventListener("storage", syncHeaderState);
       window.removeEventListener("auth-session-changed", syncHeaderState);
-      window.removeEventListener("cart-changed", syncHeaderState);
     };
   }, []);
 
@@ -65,8 +50,8 @@ function StoreHeader() {
           Sản phẩm
         </Link>
         {sessionUser?.role === "customer" ? (
-          <Link className={getNavClass("/gio-hang")} to="/gio-hang">
-            Giỏ hàng ({cartCount})
+          <Link className={getNavClass("/theo-doi-don")} to="/theo-doi-don">
+            Theo dõi đơn
           </Link>
         ) : null}
         {sessionUser?.role === "admin" ? (
