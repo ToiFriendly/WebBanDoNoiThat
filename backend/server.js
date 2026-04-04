@@ -14,11 +14,23 @@ const requestLogger = require("./middlewares/requestLogger");
 
 const app = express();
 const port = process.env.PORT || 5000;
+const defaultAllowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://localhost:5000"
+].filter(Boolean);
+const allowedOrigins = [...new Set(defaultAllowedOrigins)];
 
 app.use(requestLogger);
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173"
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked origin: ${origin}`));
+    }
   })
 );
 app.use(express.json());

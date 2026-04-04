@@ -1,10 +1,7 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { clearStoredSession, saveStoredSession } from "../../utils/storefront";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+import { API_BASE_URL, clearStoredSession, saveStoredSession } from "../../utils/storefront";
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 const loginInitialState = {
@@ -26,6 +23,18 @@ const otpInitialState = {
 
 function inputClassName() {
   return "w-full rounded-2xl border border-[#d8c4ae] bg-white/85 px-4 py-4 text-[#2f241f] outline-none transition focus:border-[#8c5f3f] focus:shadow-[0_0_0_4px_rgba(140,95,63,0.12)]";
+}
+
+function getRequestErrorMessage(error, fallbackMessage) {
+  if (error.response?.data?.message) {
+    return error.response.data.message;
+  }
+
+  if (error.request || error.message === "Network Error") {
+    return "Khong the ket noi toi backend. Hay kiem tra server va CORS.";
+  }
+
+  return fallbackMessage;
 }
 
 function Login() {
@@ -67,10 +76,7 @@ function Login() {
       resetGoogleFlow("login");
       navigate("/");
     } catch (error) {
-      setFeedback(
-        error.response?.data?.message ||
-          "Dang nhap that bai. Vui long kiem tra lai.",
-      );
+      setFeedback(getRequestErrorMessage(error, "Dang nhap that bai. Vui long kiem tra lai."));
     } finally {
       setLoading(false);
     }
@@ -92,10 +98,7 @@ function Login() {
       setRegisterForm(registerInitialState);
       resetGoogleFlow("login");
     } catch (error) {
-      setFeedback(
-        error.response?.data?.message ||
-          "Dang ky that bai. Email hoac username co the da ton tai.",
-      );
+      setFeedback(getRequestErrorMessage(error, "Dang ky that bai."));
     } finally {
       setLoading(false);
     }
@@ -124,10 +127,7 @@ function Login() {
       setMode("otp");
       setFeedback(successMessage || data.message);
     } catch (error) {
-      setFeedback(
-        error.response?.data?.message ||
-          "Khong the gui OTP tu dang nhap Google.",
-      );
+      setFeedback(getRequestErrorMessage(error, "Khong the gui OTP tu dang nhap Google."));
     } finally {
       setGoogleLoading(false);
     }
@@ -234,9 +234,7 @@ function Login() {
       resetGoogleFlow("login");
       navigate("/");
     } catch (error) {
-      setFeedback(
-        error.response?.data?.message || "Khong the xac minh OTP.",
-      );
+      setFeedback(getRequestErrorMessage(error, "Khong the xac minh OTP."));
     } finally {
       setLoading(false);
     }
