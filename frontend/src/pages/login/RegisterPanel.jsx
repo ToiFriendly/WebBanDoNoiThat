@@ -1,7 +1,4 @@
-import {
-  inputClassName,
-  primaryButtonClassName,
-} from "./authContent";
+import { inputClassName, primaryButtonClassName } from "./authContent";
 
 export default function RegisterPanel({
   registerForm,
@@ -11,22 +8,22 @@ export default function RegisterPanel({
   loading,
 }) {
   return (
-    <form className="mt-6 grid gap-4" onSubmit={onSubmit}>
-      <div className="rounded-[24px] border border-[#d8c4ae] bg-[linear-gradient(145deg,#fffaf5_0%,rgba(245,235,222,0.82)_100%)] p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8c5f3f]">
+    <form className="mt-6 grid gap-5" onSubmit={onSubmit}>
+      <div className="rounded-[24px] border border-[#d8c4ae] bg-[linear-gradient(145deg,#fffaf5_0%,rgba(245,235,222,0.82)_100%)] px-5 py-6 md:px-7">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8c5f3f] md:text-[0.9rem]">
           Tao tai khoan moi
         </p>
-        <h2 className="mt-4 text-2xl font-semibold text-[#2f241f] md:text-[2rem]">
+        <h3 className="mt-4 text-2xl font-semibold text-[#2f241f] md:text-[2rem]">
           Bat dau nhanh gon
-        </h2>
-        <p className="mt-3 text-sm leading-7 text-[#6a544a] md:text-base">
-          Dien cac truong can thiet de tao tai khoan moi va giu thong tin mua
-          sam cua ban gon gang hon.
-        </p>
+        </h3>
+        <div className="mt-3 space-y-1 text-sm leading-7 text-[#6a544a] md:text-base">
+          <p>Dien thong tin can thiet de tao tai khoan va luu bo suu tap cua ban.</p>
+          <p>Sau khi hoan tat, ban co the quay lai dang nhap ngay tren cung panel.</p>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
+        <label className="grid gap-2 text-sm font-bold text-[#5f493d] md:text-base">
           Ten nguoi dung
           <input
             className={inputClassName()}
@@ -37,7 +34,7 @@ export default function RegisterPanel({
           />
         </label>
 
-        <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
+        <label className="grid gap-2 text-sm font-bold text-[#5f493d] md:text-base">
           Email
           <input
             className={inputClassName()}
@@ -50,7 +47,7 @@ export default function RegisterPanel({
         </label>
       </div>
 
-      <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
+      <label className="grid gap-2 text-sm font-bold text-[#5f493d] md:text-base">
         Mat khau
         <input
           className={inputClassName()}
@@ -63,7 +60,7 @@ export default function RegisterPanel({
       </label>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
+        <label className="grid gap-2 text-sm font-bold text-[#5f493d] md:text-base">
           Ho va ten
           <input
             className={inputClassName()}
@@ -73,7 +70,7 @@ export default function RegisterPanel({
           />
         </label>
 
-        <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
+        <label className="grid gap-2 text-sm font-bold text-[#5f493d] md:text-base">
           So dien thoai
           <input
             className={inputClassName()}
@@ -84,20 +81,31 @@ export default function RegisterPanel({
         </label>
       </div>
 
-      <button
-        className={primaryButtonClassName()}
-        type="submit"
-        disabled={loading}
-      >
-        {loading ? "Dang xu ly..." : "Tham gia ngay"}
-      </button>
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[#7a5b47]">
+        <span>Tao tai khoan de luu san pham yeu thich va thong tin mua sam.</span>
+        <button
+          type="button"
+          className="font-bold text-[#8c5f3f] transition hover:text-[#734d36]"
+          onClick={onSwitchToLogin}
+        >
+          Da co tai khoan?
+        </button>
+      </div>
 
       <button
         type="button"
         className="w-fit text-left text-sm font-bold text-[#8c5f3f] transition hover:text-[#734d36]"
         onClick={onSwitchToLogin}
       >
-        Da co tai khoan? Quay lai dang nhap
+        Quay lai dang nhap
+      </button>
+
+      <button
+        className={primaryButtonClassName()}
+        type="submit"
+        disabled={loading}
+      >
+        {loading ? "Dang xu ly..." : "Tham gia ngay"}
       </button>
     </form>
   );
