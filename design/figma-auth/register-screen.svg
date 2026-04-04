@@ -1,0 +1,94 @@
+<svg width="1440" height="1200" viewBox="0 0 1440 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="60" x2="1320" y2="1120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6EFE4"/>
+      <stop offset="0.5" stop-color="#EFE4D3"/>
+      <stop offset="1" stop-color="#F9F5EE"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="80" y1="70" x2="670" y2="1090" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFCF7" stop-opacity="0.86"/>
+      <stop offset="1" stop-color="#F5EBDE" stop-opacity="0.72"/>
+    </linearGradient>
+    <linearGradient id="softCard" x1="772" y1="210" x2="1336" y2="470" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFAF5"/>
+      <stop offset="1" stop-color="#F5EBDE" stop-opacity="0.84"/>
+    </linearGradient>
+    <linearGradient id="cta" x1="760" y1="948" x2="1342" y2="948" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8C5F3F"/>
+      <stop offset="1" stop-color="#D87B38"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1440" height="1200" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="40" flood-color="#4C3324" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+
+  <rect width="1440" height="1200" fill="url(#bg)"/>
+  <ellipse cx="118" cy="118" rx="170" ry="170" fill="#FAC06A" fill-opacity="0.25"/>
+  <ellipse cx="1298" cy="1042" rx="220" ry="200" fill="#A16207" fill-opacity="0.10"/>
+
+  <g filter="url(#shadow)">
+    <rect x="44" y="44" width="610" height="1112" rx="36" fill="url(#panel)" stroke="#D8C4AE"/>
+    <rect x="698" y="94" width="706" height="1002" rx="36" fill="#FFFCF7" fill-opacity="0.9" stroke="#D8C4AE"/>
+  </g>
+
+  <text x="94" y="122" fill="#8C5F3F" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="6">BAT DAU HANH TRINH MOI</text>
+  <text x="94" y="236" fill="#2F241F" font-family="Segoe UI, Arial, sans-serif" font-size="76" font-weight="700" letter-spacing="-3">
+    <tspan x="94" dy="0">Tao tai khoan</tspan>
+    <tspan x="94" dy="84">moi va luu lai</tspan>
+    <tspan x="94" dy="84">gu noi that</tspan>
+    <tspan x="94" dy="84">rieng cua ban.</tspan>
+  </text>
+  <text x="94" y="642" fill="#5D483F" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="500">
+    <tspan x="94" dy="0">Trang register duoc tach thanh route rieng de</tspan>
+    <tspan x="94" dy="44">nguoi dung tap trung vao viec tao tai khoan moi.</tspan>
+  </text>
+
+  <rect x="94" y="758" width="470" height="130" rx="24" fill="#FFFFFF" fill-opacity="0.70" stroke="#D8C4AE"/>
+  <text x="122" y="814" fill="#2F241F" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700">Tach rieng man hinh dang ky</text>
+  <text x="122" y="864" fill="#6A544A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500">
+    <tspan x="122" dy="0">Bo cuc de doc hon, biet ro tung buoc va</tspan>
+    <tspan x="122" dy="32">de quay lai login khi can.</tspan>
+  </text>
+
+  <rect x="94" y="910" width="470" height="130" rx="24" fill="#FFFFFF" fill-opacity="0.66" stroke="#D8C4AE"/>
+  <text x="122" y="966" fill="#2F241F" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700">Van dong bo giao dien</text>
+  <text x="122" y="1016" fill="#6A544A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500">
+    <tspan x="122" dy="0">Register giu cung shell, cung palette va</tspan>
+    <tspan x="122" dy="32">button style voi login.</tspan>
+  </text>
+
+  <text x="748" y="160" fill="#8C5F3F" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="4">DANG KY</text>
+  <text x="748" y="228" fill="#2F241F" font-family="Segoe UI, Arial, sans-serif" font-size="56" font-weight="700">Tao tai khoan</text>
+  <rect x="1196" y="118" width="162" height="56" rx="28" fill="#FFFFFF" fill-opacity="0.74" stroke="#D8C4AE"/>
+  <text x="1221" y="154" fill="#6A544A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Ve trang chu</text>
+
+  <rect x="748" y="276" width="606" height="144" rx="26" fill="url(#softCard)" stroke="#D8C4AE"/>
+  <text x="784" y="328" fill="#8C5F3F" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="4">DANG KY MOI</text>
+  <text x="784" y="382" fill="#2F241F" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700">Tao tai khoan trong vai buoc</text>
+  <text x="784" y="420" fill="#6A544A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="500">Dien thong tin can thiet de bat dau luu san pham yeu thich va theo doi don hang.</text>
+
+  <text x="748" y="494" fill="#5F493D" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Ten nguoi dung</text>
+  <rect x="748" y="514" width="606" height="62" rx="22" fill="#FFFFFF" fill-opacity="0.9" stroke="#D8C4AE"/>
+  <text x="780" y="553" fill="#A49A93" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600">Username</text>
+
+  <text x="748" y="638" fill="#5F493D" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Email</text>
+  <rect x="748" y="658" width="606" height="62" rx="22" fill="#FFFFFF" fill-opacity="0.9" stroke="#D8C4AE"/>
+  <text x="780" y="697" fill="#A49A93" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600">Dia chi email cua ban</text>
+
+  <text x="748" y="782" fill="#5F493D" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Mat khau</text>
+  <rect x="748" y="802" width="606" height="62" rx="22" fill="#FFFFFF" fill-opacity="0.9" stroke="#D8C4AE"/>
+  <text x="780" y="841" fill="#A49A93" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600">Mat khau toi thieu 6 ky tu</text>
+
+  <text x="748" y="926" fill="#5F493D" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Ho va ten</text>
+  <text x="1060" y="926" fill="#5F493D" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">So dien thoai</text>
+  <rect x="748" y="946" width="284" height="62" rx="22" fill="#FFFFFF" fill-opacity="0.9" stroke="#D8C4AE"/>
+  <rect x="1070" y="946" width="284" height="62" rx="22" fill="#FFFFFF" fill-opacity="0.9" stroke="#D8C4AE"/>
+  <text x="780" y="985" fill="#A49A93" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600">Ho ten day du</text>
+  <text x="1102" y="985" fill="#A49A93" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600">So dien thoai lien he</text>
+
+  <rect x="748" y="1038" width="606" height="70" rx="22" fill="url(#cta)"/>
+  <text x="1051" y="1083" text-anchor="middle" fill="#FFFAF4" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700">Tham gia ngay</text>
+
+  <rect x="748" y="1124" width="606" height="58" rx="22" fill="#FFFFFF" fill-opacity="0.82" stroke="#D8C4AE"/>
+  <text x="1051" y="1161" text-anchor="middle" fill="#6A544A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Da co tai khoan? Chuyen sang dang nhap</text>
+</svg>
