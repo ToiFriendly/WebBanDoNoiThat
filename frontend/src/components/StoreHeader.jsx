@@ -53,6 +53,12 @@ function StoreHeader() {
         >
           Trang chu
         </Link>
+        <Link
+          className="rounded-full border border-[rgba(95,63,42,0.1)] bg-white/75 px-4 py-2.5 no-underline max-md:w-full"
+          to="/san-pham"
+        >
+          San pham
+        </Link>
         {sessionUser?.role === "customer" ? (
           <Link
             className="rounded-full border border-[rgba(95,63,42,0.1)] bg-white/75 px-4 py-2.5 no-underline max-md:w-full"
