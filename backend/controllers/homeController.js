@@ -199,8 +199,53 @@ async function getCategoryProducts(req, res, next) {
   }
 }
 
+async function getAllProducts(req, res, next) {
+  try {
+    const searchQuery =
+      typeof req.query.q === "string" ? req.query.q.trim() : "";
+    const requestedPage = parsePositiveInteger(req.query.page, 1);
+    const requestedLimit = Math.min(parsePositiveInteger(req.query.limit, 12), 24);
+    const searchRegex = searchQuery
+      ? new RegExp(escapeRegex(searchQuery), "i")
+      : null;
+
+    const baseFilter = {
+      status: "active",
+      isDeleted: false
+    };
+    const productFilter = searchRegex
+      ? { ...baseFilter, name: searchRegex }
+      : baseFilter;
+
+    const totalItems = await Product.countDocuments(productFilter);
+    const totalPages = Math.max(Math.ceil(totalItems / requestedLimit), 1);
+    const currentPage = Math.min(requestedPage, totalPages);
+
+    const products = await Product.find(productFilter)
+      .populate("category", "name slug")
+      .sort({ createdAt: -1 })
+      .skip((currentPage - 1) * requestedLimit)
+      .limit(requestedLimit);
+
+    return res.status(200).json({
+      products: products.map(mapProduct),
+      pagination: {
+        page: currentPage,
+        limit: requestedLimit,
+        totalItems,
+        totalPages,
+        hasPreviousPage: currentPage > 1,
+        hasNextPage: currentPage < totalPages
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   getHomeData,
   getProductDetail,
-  getCategoryProducts
+  getCategoryProducts,
+  getAllProducts
 };

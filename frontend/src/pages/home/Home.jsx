@@ -189,6 +189,12 @@ function Home() {
           >
             Danh muc
           </a>
+          <Link
+            className="rounded-full border border-[rgba(95,63,42,0.1)] bg-white/75 px-4 py-2.5 no-underline"
+            to="/san-pham"
+          >
+            Tat ca san pham
+          </Link>
           <a
             className="rounded-full border border-[rgba(95,63,42,0.1)] bg-white/75 px-4 py-2.5 no-underline"
             href="#noi-bat"
