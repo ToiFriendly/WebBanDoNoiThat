@@ -1,3 +1,4 @@
+import "./Cart.css";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import StoreHeader from "../../components/StoreHeader";
@@ -66,7 +67,7 @@ function Cart() {
         const data = await requestAuthJson(`${API_BASE_URL}/api/shop/cart`);
         setCart(data?.cart || emptyCart());
       } catch (cartError) {
-        setFeedback(cartError.message || "Khong the tai gio hang.");
+        setFeedback(cartError.message || "Không thể tải giỏ hàng.");
       } finally {
         setLoading(false);
       }
@@ -84,29 +85,21 @@ function Cart() {
   }, []);
 
   function updateShippingField(field, value) {
-    setShippingForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setShippingForm((prev) => ({ ...prev, [field]: value }));
   }
 
   async function updateQuantity(productId, quantity) {
     try {
       setActionLoadingKey(productId);
       setFeedback("");
-
       const data = await requestAuthJson(
         `${API_BASE_URL}/api/shop/cart/items/${productId}`,
-        {
-          method: "PATCH",
-          body: { quantity },
-        },
+        { method: "PATCH", body: { quantity } },
       );
-
       setCart(data?.cart || emptyCart());
       emitCartChanged();
     } catch (cartError) {
-      setFeedback(cartError.message || "Khong the cap nhat gio hang.");
+      setFeedback(cartError.message || "Không thể cập nhật giỏ hàng.");
     } finally {
       setActionLoadingKey("");
     }
@@ -116,16 +109,14 @@ function Cart() {
     try {
       setActionLoadingKey(productId);
       setFeedback("");
-
       const data = await requestAuthJson(
         `${API_BASE_URL}/api/shop/cart/items/${productId}`,
         { method: "DELETE" },
       );
-
       setCart(data?.cart || emptyCart());
       emitCartChanged();
     } catch (cartError) {
-      setFeedback(cartError.message || "Khong the xoa san pham.");
+      setFeedback(cartError.message || "Không thể xóa sản phẩm.");
     } finally {
       setActionLoadingKey("");
     }
@@ -135,15 +126,13 @@ function Cart() {
     try {
       setActionLoadingKey("clear-cart");
       setFeedback("");
-
       const data = await requestAuthJson(`${API_BASE_URL}/api/shop/cart`, {
         method: "DELETE",
       });
-
       setCart(data?.cart || emptyCart());
       emitCartChanged();
     } catch (cartError) {
-      setFeedback(cartError.message || "Khong the lam trong gio hang.");
+      setFeedback(cartError.message || "Không thể làm trống giỏ hàng.");
     } finally {
       setActionLoadingKey("");
     }
@@ -159,11 +148,7 @@ function Cart() {
 
       const data = await requestAuthJson(`${API_BASE_URL}/api/shop/checkout`, {
         method: "POST",
-        body: {
-          shippingAddress: shippingForm,
-          paymentMethod,
-          note,
-        },
+        body: { shippingAddress: shippingForm, paymentMethod, note },
       });
 
       setLastOrder(data?.order || null);
@@ -177,17 +162,17 @@ function Cart() {
 
       setFeedback(
         data?.message ||
-          `Dat hang thanh cong. Ma don cua ban la ${data?.order?.orderCode}.`,
+          `Đặt hàng thành công. Mã đơn của bạn là ${data?.order?.orderCode}.`,
       );
     } catch (checkoutError) {
-      setFeedback(checkoutError.message || "Khong the dat hang luc nay.");
+      setFeedback(checkoutError.message || "Không thể đặt hàng lúc này.");
 
       try {
         const latestCart = await requestAuthJson(`${API_BASE_URL}/api/shop/cart`);
         setCart(latestCart?.cart || emptyCart());
         emitCartChanged();
       } catch {
-        // Keep the existing UI state if cart reload also fails.
+        // Keep existing UI state if cart reload also fails
       }
     } finally {
       setCheckoutLoading(false);
@@ -195,130 +180,147 @@ function Cart() {
   }
 
   return (
-    <main className="min-h-screen px-3 py-4 text-[#2f241f] md:px-6 md:py-6">
-      <section className="mx-auto w-full max-w-[1180px] rounded-[32px] border border-[rgba(95,63,42,0.12)] bg-[rgba(255,251,245,0.82)] p-5 shadow-[0_20px_60px_rgba(79,52,35,0.08)] md:p-6">
+    <main className="cart-page">
+      <section className="cart-container">
         <StoreHeader />
 
+        {/* Breadcrumb */}
+        <nav className="cart-breadcrumb">
+          <Link to="/">Trang chủ</Link>
+          <svg className="cart-breadcrumb__sep" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+          <span className="cart-breadcrumb__current">Giỏ hàng</span>
+        </nav>
+
+        {/* Not logged in */}
         {!sessionUser ? (
-          <div className="rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 p-6">
-            <h1 className="text-3xl font-semibold">Gio hang cua ban</h1>
-            <p className="mt-4 leading-7 text-[#5c4a40]">
-              Ban can dang nhap de luu gio hang va dat hang.
+          <div className="cart-login-prompt">
+            <div className="cart-login-prompt__icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+            <h1 className="cart-login-prompt__title">Giỏ hàng của bạn</h1>
+            <p className="cart-login-prompt__desc">
+              Bạn cần đăng nhập để lưu giỏ hàng và đặt hàng.
             </p>
-            <Link
-              to="/login"
-              className="mt-5 inline-flex min-h-12 items-center justify-center rounded-full bg-[#2f241f] px-5 font-bold text-[#fff8f0] no-underline"
-            >
-              Dang nhap ngay
+            <Link to="/login" className="cart-login-prompt__btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
+              Đăng nhập ngay
             </Link>
           </div>
         ) : (
           <>
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-xs tracking-[0.16em] text-[#8b6243] uppercase">
-                  Gio hang
-                </p>
-                <h1 className="mt-2 text-4xl font-semibold md:text-5xl">
-                  Xac nhan so luong truoc khi dat hang
+            {/* Cart Header */}
+            <div className="cart-header">
+              <div className="cart-header__left">
+                <div className="cart-header__icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="9" cy="21" r="1" />
+                    <circle cx="20" cy="21" r="1" />
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                  </svg>
+                </div>
+                <h1 className="cart-header__title">
+                  Giỏ hàng
+                  {cart.items.length > 0 && (
+                    <span className="cart-header__count">{cart.totalQuantity} sản phẩm</span>
+                  )}
                 </h1>
               </div>
 
               <button
                 type="button"
-                className="rounded-full border border-[rgba(95,63,42,0.14)] bg-white/80 px-4 py-2.5 font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                className="cart-header__clear"
                 onClick={clearCartItems}
                 disabled={!cart.items.length || actionLoadingKey === "clear-cart" || checkoutLoading}
               >
-                {actionLoadingKey === "clear-cart" ? "Dang xoa..." : "Lam trong gio"}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+                {actionLoadingKey === "clear-cart" ? "Đang xóa..." : "Xóa tất cả"}
               </button>
             </div>
 
-            {feedback ? (
-              <div className="mb-6 rounded-2xl bg-[#f5ebde] px-4 py-3 text-[#734d36]">
-                {feedback}
-              </div>
-            ) : null}
+            {/* Feedback */}
+            {feedback && (
+              <div className="cart-feedback">{feedback}</div>
+            )}
 
+            {/* Loading */}
             {loading ? (
-              <div className="rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 p-6">
-                Dang tai gio hang...
+              <div className="cart-loading">
+                <div className="cart-loading__spinner" />
+                <p>Đang tải giỏ hàng...</p>
               </div>
             ) : (
-              <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-                <div className="grid gap-4">
+              <div className="cart-layout">
+                {/* ===== LEFT: Cart Items ===== */}
+                <div className="cart-items">
                   {cart.items.length ? (
                     cart.items.map((item) => {
                       const image = getDisplayImage(item.product?.images);
                       const isBusy = actionLoadingKey === item.product._id || checkoutLoading;
 
                       return (
-                        <article
-                          key={item.product._id}
-                          className="grid gap-4 rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/75 p-5 md:grid-cols-[140px_1fr]"
-                        >
-                          <div className="overflow-hidden rounded-[22px] bg-[#f3e5d7]">
+                        <article key={item.product._id} className="cart-item">
+                          {/* Image */}
+                          <div className="cart-item__img-wrap">
                             {image ? (
-                              <img
-                                className="block aspect-square h-full w-full object-cover"
-                                src={image}
-                                alt={item.product.name}
-                              />
+                              <img className="cart-item__img" src={image} alt={item.product.name} />
                             ) : (
-                              <div className="flex aspect-square items-end bg-[linear-gradient(135deg,rgba(164,116,78,0.28),rgba(245,222,194,0.7))] p-4">
-                                <span className="rounded-full bg-white/75 px-3 py-2 text-sm font-bold">
-                                  {item.product.name}
-                                </span>
+                              <div className="cart-item__img-placeholder">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                  <circle cx="8.5" cy="8.5" r="1.5" />
+                                  <polyline points="21 15 16 10 5 21" />
+                                </svg>
                               </div>
                             )}
                           </div>
 
-                          <div className="flex flex-col gap-4">
-                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                              <div>
-                                <Link
-                                  className="text-2xl font-semibold text-[#2f241f] no-underline"
-                                  to={`/san-pham/${item.product.slug}`}
-                                >
-                                  {item.product.name}
-                                </Link>
-                                <div className="mt-2 text-sm text-[#6a564b]">
-                                  Ton kho hien tai: {item.product.quantityInStock}
-                                </div>
-                              </div>
-
-                              <div className="text-right">
-                                <div className="text-sm text-[#8b6243]">Don gia</div>
-                                <strong className="text-xl">{formatCurrency(item.unitPrice)}</strong>
-                              </div>
+                          {/* Body */}
+                          <div className="cart-item__body">
+                            <div className="cart-item__top">
+                              <Link className="cart-item__name" to={`/san-pham/${item.product.slug}`}>
+                                {item.product.name}
+                              </Link>
+                              <span className="cart-item__unit-price">
+                                {formatCurrency(item.unitPrice)}
+                              </span>
                             </div>
 
-                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                              <div className="flex items-center gap-3">
+                            <div className="cart-item__bottom">
+                              {/* Quantity */}
+                              <div className="cart-item__qty">
                                 <button
                                   type="button"
-                                  className="rounded-full border border-[rgba(95,63,42,0.14)] bg-white/80 px-4 py-2"
+                                  className="cart-item__qty-btn"
                                   onClick={() => updateQuantity(item.product._id, Math.max(1, item.quantity - 1))}
                                   disabled={isBusy}
                                 >
-                                  -
+                                  −
                                 </button>
                                 <input
-                                  className="w-24 rounded-full border border-[rgba(95,63,42,0.14)] bg-white/80 px-4 py-2 text-center outline-none"
+                                  className="cart-item__qty-input"
                                   type="number"
                                   min="1"
                                   value={item.quantity}
-                                  onChange={(event) =>
-                                    updateQuantity(
-                                      item.product._id,
-                                      Math.max(1, Number(event.target.value) || 1),
-                                    )
+                                  onChange={(e) =>
+                                    updateQuantity(item.product._id, Math.max(1, Number(e.target.value) || 1))
                                   }
                                   disabled={isBusy}
                                 />
                                 <button
                                   type="button"
-                                  className="rounded-full border border-[rgba(95,63,42,0.14)] bg-white/80 px-4 py-2"
+                                  className="cart-item__qty-btn"
                                   onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
                                   disabled={isBusy}
                                 >
@@ -326,17 +328,22 @@ function Cart() {
                                 </button>
                               </div>
 
-                              <div className="flex items-center gap-3">
-                                <strong className="text-xl">
+                              {/* Total + Remove */}
+                              <div className="cart-item__right">
+                                <strong className="cart-item__line-total">
                                   {formatCurrency(item.lineTotal)}
                                 </strong>
                                 <button
                                   type="button"
-                                  className="rounded-full bg-[#f3e5d7] px-4 py-2 font-semibold text-[#5a4336] disabled:cursor-not-allowed disabled:opacity-60"
+                                  className="cart-item__remove"
                                   onClick={() => removeItem(item.product._id)}
                                   disabled={isBusy}
+                                  title="Xóa sản phẩm"
                                 >
-                                  Xoa
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                  </svg>
                                 </button>
                               </div>
                             </div>
@@ -345,174 +352,230 @@ function Cart() {
                       );
                     })
                   ) : (
-                    <div className="rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 p-6">
-                      Gio hang dang trong. Hay quay lai trang san pham de them mon hang.
+                    <div className="cart-empty">
+                      <div className="cart-empty__icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                          <line x1="3" y1="6" x2="21" y2="6" />
+                          <path d="M16 10a4 4 0 0 1-8 0" />
+                        </svg>
+                      </div>
+                      <p>Giỏ hàng đang trống. Hãy khám phá sản phẩm để thêm vào giỏ!</p>
+                      <Link to="/san-pham" className="cart-empty__link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                        Xem sản phẩm
+                      </Link>
                     </div>
                   )}
                 </div>
 
-                <div className="grid gap-5 rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/75 p-5">
-                  <div>
-                    <p className="text-xs tracking-[0.16em] text-[#8b6243] uppercase">
-                      Dat hang
-                    </p>
-                    <h2 className="mt-2 text-3xl font-semibold">Thong tin giao hang</h2>
-                  </div>
+                {/* ===== RIGHT: Checkout ===== */}
+                <div className="cart-checkout">
+                  <h2 className="cart-checkout__title">
+                    <span className="cart-checkout__title-icon">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                      </svg>
+                    </span>
+                    Đặt hàng
+                  </h2>
 
-                  <div className="rounded-3xl bg-[#fff8f0] p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <span>Tong so luong</span>
+                  {/* Summary */}
+                  <div className="cart-summary">
+                    <div className="cart-summary__row">
+                      <span>Tổng số lượng</span>
                       <strong>{cart.totalQuantity}</strong>
                     </div>
-                    <div className="mt-3 flex items-center justify-between gap-3">
-                      <span>Tam tinh</span>
+                    <div className="cart-summary__row">
+                      <span>Tạm tính</span>
                       <strong>{formatCurrency(cart.totalAmount)}</strong>
                     </div>
-                    <div className="mt-3 flex items-center justify-between gap-3">
-                      <span>Phi van chuyen</span>
+                    <div className="cart-summary__row">
+                      <span>Phí vận chuyển</span>
                       <strong>{formatCurrency(0)}</strong>
                     </div>
-                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-[rgba(95,63,42,0.1)] pt-4 text-lg">
-                      <span>Thanh toan</span>
+                    <hr className="cart-summary__divider" />
+                    <div className="cart-summary__row cart-summary__total">
+                      <span>Thanh toán</span>
                       <strong>{formatCurrency(cart.totalAmount)}</strong>
                     </div>
                   </div>
 
-                  <form className="grid gap-4" onSubmit={handleCheckout}>
-                    <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
-                      Ho va ten
+                  <hr className="cart-divider" />
+
+                  {/* Form */}
+                  <form className="cart-form" onSubmit={handleCheckout}>
+                    <div className="cart-form__group">
+                      <label className="cart-form__label" htmlFor="cart-fullname">Họ và tên</label>
                       <input
-                        className="w-full rounded-2xl border border-[#d8c4ae] bg-white/85 px-4 py-3 outline-none"
+                        id="cart-fullname"
+                        className="cart-form__input"
                         value={shippingForm.fullName}
-                        onChange={(event) => updateShippingField("fullName", event.target.value)}
+                        onChange={(e) => updateShippingField("fullName", e.target.value)}
                         required
                       />
-                    </label>
+                    </div>
 
-                    <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
-                      So dien thoai
+                    <div className="cart-form__group">
+                      <label className="cart-form__label" htmlFor="cart-phone">Số điện thoại</label>
                       <input
-                        className="w-full rounded-2xl border border-[#d8c4ae] bg-white/85 px-4 py-3 outline-none"
+                        id="cart-phone"
+                        className="cart-form__input"
                         value={shippingForm.phone}
-                        onChange={(event) => updateShippingField("phone", event.target.value)}
+                        onChange={(e) => updateShippingField("phone", e.target.value)}
                         required
                       />
-                    </label>
+                    </div>
 
-                    <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
-                      Dia chi
+                    <div className="cart-form__group">
+                      <label className="cart-form__label" htmlFor="cart-street">Địa chỉ</label>
                       <input
-                        className="w-full rounded-2xl border border-[#d8c4ae] bg-white/85 px-4 py-3 outline-none"
+                        id="cart-street"
+                        className="cart-form__input"
                         value={shippingForm.street}
-                        onChange={(event) => updateShippingField("street", event.target.value)}
+                        onChange={(e) => updateShippingField("street", e.target.value)}
                         required
                       />
-                    </label>
+                    </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
-                        Phuong / Xa
+                    <div className="cart-form__row">
+                      <div className="cart-form__group">
+                        <label className="cart-form__label" htmlFor="cart-ward">Phường / Xã</label>
                         <input
-                          className="w-full rounded-2xl border border-[#d8c4ae] bg-white/85 px-4 py-3 outline-none"
+                          id="cart-ward"
+                          className="cart-form__input"
                           value={shippingForm.ward}
-                          onChange={(event) => updateShippingField("ward", event.target.value)}
+                          onChange={(e) => updateShippingField("ward", e.target.value)}
                         />
-                      </label>
-                      <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
-                        Quan / Huyen
+                      </div>
+                      <div className="cart-form__group">
+                        <label className="cart-form__label" htmlFor="cart-district">Quận / Huyện</label>
                         <input
-                          className="w-full rounded-2xl border border-[#d8c4ae] bg-white/85 px-4 py-3 outline-none"
+                          id="cart-district"
+                          className="cart-form__input"
                           value={shippingForm.district}
-                          onChange={(event) => updateShippingField("district", event.target.value)}
+                          onChange={(e) => updateShippingField("district", e.target.value)}
                           required
                         />
-                      </label>
+                      </div>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
-                        Tinh / Thanh pho
+                    <div className="cart-form__row">
+                      <div className="cart-form__group">
+                        <label className="cart-form__label" htmlFor="cart-city">Tỉnh / Thành phố</label>
                         <input
-                          className="w-full rounded-2xl border border-[#d8c4ae] bg-white/85 px-4 py-3 outline-none"
+                          id="cart-city"
+                          className="cart-form__input"
                           value={shippingForm.city}
-                          onChange={(event) => updateShippingField("city", event.target.value)}
+                          onChange={(e) => updateShippingField("city", e.target.value)}
                           required
                         />
-                      </label>
-                      <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
-                        Quoc gia
+                      </div>
+                      <div className="cart-form__group">
+                        <label className="cart-form__label" htmlFor="cart-country">Quốc gia</label>
                         <input
-                          className="w-full rounded-2xl border border-[#d8c4ae] bg-white/85 px-4 py-3 outline-none"
+                          id="cart-country"
+                          className="cart-form__input"
                           value={shippingForm.country}
-                          onChange={(event) => updateShippingField("country", event.target.value)}
+                          onChange={(e) => updateShippingField("country", e.target.value)}
                         />
-                      </label>
+                      </div>
                     </div>
 
-                    <label className="grid gap-2 text-sm font-semibold text-[#5f493d]">
-                      Ghi chu
+                    <div className="cart-form__group">
+                      <label className="cart-form__label" htmlFor="cart-note">Ghi chú</label>
                       <textarea
-                        className="min-h-24 w-full rounded-2xl border border-[#d8c4ae] bg-white/85 px-4 py-3 outline-none"
+                        id="cart-note"
+                        className="cart-form__textarea"
                         value={note}
-                        onChange={(event) => setNote(event.target.value)}
-                        placeholder="Vi du: giao gio hanh chinh, goi truoc khi giao..."
+                        onChange={(e) => setNote(e.target.value)}
+                        placeholder="Ví dụ: giao giờ hành chính, gọi trước khi giao..."
                       />
-                    </label>
+                    </div>
 
-                    <div className="grid gap-3 rounded-3xl bg-[#fff8f0] p-4">
-                      <label className="flex items-center gap-3">
+                    {/* Payment Method */}
+                    <div className="cart-payment">
+                      <div className="cart-payment__title">Phương thức thanh toán</div>
+                      <label
+                        className={`cart-payment__option ${paymentMethod === "momo" ? "cart-payment__option--active" : ""}`}
+                      >
                         <input
                           type="radio"
                           name="paymentMethod"
                           value="momo"
                           checked={paymentMethod === "momo"}
-                          onChange={(event) => setPaymentMethod(event.target.value)}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
                         />
-                        <span>Thanh toan bang MoMo</span>
+                        <span className="cart-payment__option-label">
+                          <span className="cart-payment__option-name">MoMo</span>
+                          <span className="cart-payment__option-desc">Thanh toán qua ví MoMo</span>
+                        </span>
                       </label>
-                      <label className="flex items-center gap-3">
+                      <label
+                        className={`cart-payment__option ${paymentMethod === "cod" ? "cart-payment__option--active" : ""}`}
+                      >
                         <input
                           type="radio"
                           name="paymentMethod"
                           value="cod"
                           checked={paymentMethod === "cod"}
-                          onChange={(event) => setPaymentMethod(event.target.value)}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
                         />
-                        <span>Thanh toan khi nhan hang</span>
+                        <span className="cart-payment__option-label">
+                          <span className="cart-payment__option-name">COD</span>
+                          <span className="cart-payment__option-desc">Thanh toán khi nhận hàng</span>
+                        </span>
                       </label>
                     </div>
 
+                    {/* Submit */}
                     <button
                       type="submit"
-                      className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#2f241f] px-5 font-bold text-[#fff8f0] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="cart-submit"
                       disabled={checkoutLoading || !cart.items.length}
                     >
-                      {checkoutLoading
-                        ? "Dang tao don hang..."
-                        : paymentMethod === "momo"
-                          ? "Dat hang va den MoMo"
-                          : "Dat hang"}
+                      {checkoutLoading ? (
+                        <>
+                          <span className="cart-submit__spinner" />
+                          Đang tạo đơn hàng...
+                        </>
+                      ) : (
+                        <>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="9 11 12 14 22 4" />
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                          </svg>
+                          {paymentMethod === "momo" ? "Đặt hàng & thanh toán MoMo" : "Đặt hàng"}
+                        </>
+                      )}
                     </button>
                   </form>
 
-                  <p className="text-sm leading-6 text-[#6a564b]">
-                    Nut Dat hang se bi disable trong luc xu ly de tranh tao nhieu transaction trung nhau.
+                  <p className="cart-hint">
+                    Đơn hàng sẽ được xử lý ngay sau khi bạn xác nhận. Nút đặt hàng sẽ tạm khóa trong lúc xử lý.
                   </p>
                 </div>
               </div>
             )}
 
-            {lastOrder ? (
-              <div className="mt-6 rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/75 p-5">
-                <p className="text-xs tracking-[0.16em] text-[#8b6243] uppercase">
-                  Don hang moi nhat
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold">{lastOrder.orderCode}</h2>
-                <p className="mt-2 text-[#5c4a40]">
-                  Dat luc {formatDateTime(lastOrder.placedAt)}.
-                </p>
+            {/* Last Order */}
+            {lastOrder && (
+              <div className="cart-last-order">
+                <span className="cart-last-order__badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Đặt hàng thành công
+                </span>
+                <div className="cart-last-order__code">{lastOrder.orderCode}</div>
+                <div className="cart-last-order__date">
+                  Đặt lúc {formatDateTime(lastOrder.placedAt)}
+                </div>
               </div>
-            ) : null}
+            )}
           </>
         )}
       </section>
