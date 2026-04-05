@@ -1,0 +1,39 @@
+# ============================================
+# Docker Compose cho Production Deployment
+# ============================================
+
+services:
+  # Backend API (Node.js/Express)
+  backend:
+    image: ${DOCKERHUB_USERNAME}/webbandoNoiThat-backend:latest
+    container_name: noithat-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Frontend (React/Vite + Nginx)
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/webbandoNoiThat-frontend:latest
+    container_name: noithat-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
