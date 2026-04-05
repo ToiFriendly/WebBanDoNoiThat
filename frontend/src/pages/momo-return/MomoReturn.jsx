@@ -166,10 +166,10 @@ function MomoReturn() {
               Ve trang chu
             </Link>
             <Link
-              to="/gio-hang"
+              to={orderCode ? `/theo-doi-don?orderCode=${encodeURIComponent(orderCode)}` : "/theo-doi-don"}
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-[rgba(95,63,42,0.18)] bg-white/80 px-5 font-bold no-underline"
             >
-              Ve gio hang
+              Ve theo doi don
             </Link>
           </div>
         </div>

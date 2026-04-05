@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+
 import { clearStoredSession, saveStoredSession } from "../../utils/storefront";
 import AuthHero from "./AuthHero";
 import AuthTabs from "./AuthTabs";
@@ -82,10 +83,7 @@ function Login() {
       resetGoogleFlow("login");
       navigate("/");
     } catch (error) {
-      setFeedback(
-        error.response?.data?.message ||
-          "Dang nhap that bai. Vui long kiem tra lai.",
-      );
+      setFeedback(getRequestErrorMessage(error, "Dang nhap that bai. Vui long kiem tra lai."));
     } finally {
       setLoading(false);
     }
@@ -107,10 +105,7 @@ function Login() {
       setRegisterForm(registerInitialState);
       resetGoogleFlow("login");
     } catch (error) {
-      setFeedback(
-        error.response?.data?.message ||
-          "Dang ky that bai. Email hoac username co the da ton tai.",
-      );
+      setFeedback(getRequestErrorMessage(error, "Dang ky that bai."));
     } finally {
       setLoading(false);
     }
@@ -132,10 +127,7 @@ function Login() {
       setMode("otp");
       setFeedback(successMessage || data.message);
     } catch (error) {
-      setFeedback(
-        error.response?.data?.message ||
-          "Khong the gui OTP tu dang nhap Google.",
-      );
+      setFeedback(getRequestErrorMessage(error, "Khong the gui OTP tu dang nhap Google."));
     } finally {
       setGoogleLoading(false);
     }
@@ -255,7 +247,9 @@ function Login() {
       resetGoogleFlow("login");
       navigate("/");
     } catch (error) {
+
       setFeedback(error.response?.data?.message || "Khong the xac minh OTP.");
+
     } finally {
       setLoading(false);
     }
