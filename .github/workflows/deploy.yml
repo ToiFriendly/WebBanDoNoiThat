@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - main
+      - feature/CICD
   # Cho phép chạy thủ công từ tab Actions
   workflow_dispatch:
 
