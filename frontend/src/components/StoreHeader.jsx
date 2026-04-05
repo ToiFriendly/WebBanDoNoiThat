@@ -81,6 +81,9 @@ function StoreHeader() {
         <Link className={getNavClass("/")} to="/">
           Trang chủ
         </Link>
+        <Link className={getNavClass("/danh-muc")} to="/danh-muc">
+          Danh mục
+        </Link>
         <Link className={getNavClass("/san-pham")} to="/san-pham">
           Sản phẩm
         </Link>

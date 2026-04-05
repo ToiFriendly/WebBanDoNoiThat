@@ -3,7 +3,8 @@ const {
   getHomeData,
   getProductDetail,
   getCategoryProducts,
-  getAllProducts
+  getAllProducts,
+  getAllCategories
 } = require("../controllers/homeController");
 
 const router = express.Router();
@@ -11,6 +12,7 @@ const router = express.Router();
 router.get("/", getHomeData);
 router.get("/products", getAllProducts);
 router.get("/products/:slug", getProductDetail);
+router.get("/categories", getAllCategories);
 router.get("/categories/:slug", getCategoryProducts);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Navigate, Routes, Route } from "react-router-dom";
 import Admin from "./pages/admin/Admin";
+import Browse from "./pages/browse/Browse";
 import Cart from "./pages/cart/Cart";
 import CategoryProducts from "./pages/category-products/CategoryProducts";
 import ContactSupport from "./pages/contact-support/ContactSupport";
@@ -24,6 +25,7 @@ function App() {
         <Route path="/thanh-toan/momo" element={<MomoReturn />} />
         <Route path="/san-pham" element={<Products />} />
         <Route path="/san-pham/:slug" element={<ProductDetail />} />
+        <Route path="/danh-muc" element={<Browse />} />
         <Route path="/danh-muc/:slug" element={<CategoryProducts />} />
 
         <Route path="/lien-he" element={<ContactSupport />} />
