@@ -82,9 +82,11 @@ app.use(
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? "connected" : "disconnected";
   res.status(200).json({
     message: "Backend auth is running.",
-    allowedOrigins
+    allowedOrigins,
+    database: dbStatus
   });
 });
 
@@ -102,17 +104,19 @@ app.use((err, _req, res, _next) => {
 });
 
 async function startServer() {
+  // Start server first, then connect to MongoDB
+  app.listen(port, () => {
+    console.log(`Backend is running on port ${port}`);
+  });
+
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       dbName: process.env.MONGODB_DB_NAME || undefined
     });
-
-    app.listen(port, () => {
-      console.log(`Backend is running on port ${port}`);
-    });
+    console.log("MongoDB connected successfully");
   } catch (error) {
     console.error("MongoDB connection failed:", error.message);
-    process.exit(1);
+    console.error("Server will continue running but database operations will fail");
   }
 }
 
