@@ -8,6 +8,7 @@ import Home from "./pages/home/Home";
 import MomoReturn from "./pages/momo-return/MomoReturn";
 import OrderTracking from "./pages/order-tracking/OrderTracking";
 import ProductDetail from "./pages/product-detail/ProductDetail";
+import Products from "./pages/products/Products";
 import SupportCenter from "./pages/support-center/SupportCenter";
 
 function App() {
