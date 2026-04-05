@@ -81,6 +81,9 @@ function StoreHeader() {
         <Link className={getNavClass("/")} to="/">
           Trang chủ
         </Link>
+        <Link className={getNavClass("/danh-muc")} to="/danh-muc">
+          Danh mục
+        </Link>
         <Link className={getNavClass("/san-pham")} to="/san-pham">
           Sản phẩm
         </Link>
@@ -132,22 +135,26 @@ function StoreHeader() {
           </>
         ) : null}
         {sessionUser?.role === "admin" ? (
-          <Link
-            to="/admin"
-            className={getNavClass("/admin")}
-          >
+          <Link to="/admin" className={getNavClass("/admin")}>
             Quản trị
           </Link>
         ) : null}
+        {sessionUser ? (
+          <Link className={getNavClass("/ho-so")} to="/ho-so">
+            Hồ sơ
+          </Link>
+        ) : null}
         <Link
-          to="/login"
+          to={sessionUser ? "/ho-so" : "/login"}
           className={`rounded-full px-4 py-2.5 no-underline max-md:w-full ${
             sessionUser
               ? "bg-[#2f241f] font-bold text-[#fff8f0]"
               : "border border-[rgba(95,63,42,0.1)] bg-white/75"
           }`}
         >
-          {sessionUser ? sessionUser.fullName || sessionUser.username : "Dang nhap"}
+          {sessionUser
+            ? sessionUser.fullName || sessionUser.username
+            : "Dang nhap"}
         </Link>
       </nav>
     </header>

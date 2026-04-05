@@ -20,6 +20,10 @@ function sanitizeUser(user) {
   return user.toJSON();
 }
 
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || ""));
+}
+
 function createRandomPassword() {
   return crypto.randomBytes(24).toString("hex");
 }
@@ -291,6 +295,99 @@ async function getMe(req, res) {
   });
 }
 
+async function updateMe(req, res) {
+  try {
+    const payload = req.body || {};
+    const nextUsername = payload.username?.trim();
+    const nextFullName = payload.fullName?.trim();
+    const nextPhone = payload.phone?.trim();
+    const nextEmailRaw = payload.email?.trim();
+    const nextEmail = nextEmailRaw ? nextEmailRaw.toLowerCase() : "";
+    const hasUsername = Object.prototype.hasOwnProperty.call(payload, "username");
+    const hasFullName = Object.prototype.hasOwnProperty.call(payload, "fullName");
+    const hasPhone = Object.prototype.hasOwnProperty.call(payload, "phone");
+    const hasEmail = Object.prototype.hasOwnProperty.call(payload, "email");
+
+    if (!hasUsername && !hasFullName && !hasPhone && !hasEmail) {
+      return res.status(400).json({
+        message: "Khong co thong tin nao de cap nhat."
+      });
+    }
+
+    if (hasUsername && !nextUsername) {
+      return res.status(400).json({
+        message: "Username khong duoc de trong."
+      });
+    }
+
+    if (hasEmail && !nextEmail) {
+      return res.status(400).json({
+        message: "Email khong duoc de trong."
+      });
+    }
+
+    if (hasEmail && !isValidEmail(nextEmail)) {
+      return res.status(400).json({
+        message: "Email khong hop le."
+      });
+    }
+
+    if (hasUsername) {
+      const usernameUsed = await User.exists({
+        _id: { $ne: req.user._id },
+        username: nextUsername
+      });
+
+      if (usernameUsed) {
+        return res.status(409).json({
+          message: "Username da ton tai."
+        });
+      }
+    }
+
+    if (hasEmail) {
+      const emailUsed = await User.exists({
+        _id: { $ne: req.user._id },
+        email: nextEmail
+      });
+
+      if (emailUsed) {
+        return res.status(409).json({
+          message: "Email da ton tai."
+        });
+      }
+    }
+
+    if (hasUsername) {
+      req.user.username = nextUsername;
+    }
+
+    if (hasFullName) {
+      req.user.fullName = nextFullName || "";
+    }
+
+    if (hasPhone) {
+      req.user.phone = nextPhone || "";
+    }
+
+    if (hasEmail) {
+      req.user.email = nextEmail;
+    }
+
+    await req.user.save();
+
+    return res.status(200).json({
+      message: "Cap nhat thong tin ca nhan thanh cong.",
+      user: sanitizeUser(req.user)
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Khong the cap nhat thong tin ca nhan.",
+      error: error.message
+    });
+  }
+}
+
 async function getAdminAccess(req, res) {
   return res.status(200).json({
     message: "Chao mung admin.",
@@ -434,6 +531,7 @@ module.exports = {
   login,
   register,
   getMe,
+  updateMe,
   getAdminAccess,
   requestGoogleOtp,
   verifyGoogleOtp
