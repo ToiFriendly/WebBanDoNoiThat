@@ -243,9 +243,55 @@ async function getAllProducts(req, res, next) {
   }
 }
 
+async function getAllCategories(_req, res, next) {
+  try {
+    const categories = await Category.find({
+      isActive: true,
+      isDeleted: false
+    })
+      .populate("parentCategory", "name slug")
+      .sort({ sortOrder: 1, updatedAt: -1 });
+
+    const categoryIds = categories.map((cat) => cat._id);
+    const productCounts = await Product.aggregate([
+      {
+        $match: {
+          category: { $in: categoryIds },
+          status: "active",
+          isDeleted: false
+        }
+      },
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const countMap = {};
+    for (const item of productCounts) {
+      countMap[item._id.toString()] = item.count;
+    }
+
+    const result = categories.map((cat) => ({
+      ...mapCategory(cat),
+      productCount: countMap[cat._id.toString()] || 0
+    }));
+
+    return res.status(200).json({
+      categories: result,
+      totalCategories: result.length
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   getHomeData,
   getProductDetail,
   getCategoryProducts,
-  getAllProducts
+  getAllProducts,
+  getAllCategories
 };
