@@ -39,7 +39,7 @@ export function emitCartChanged() {
 
 export function formatCurrency(price) {
   if (typeof price !== "number") {
-    return "Lien he";
+    return "Liên hệ";
   }
 
   return new Intl.NumberFormat("vi-VN", {
@@ -100,7 +100,7 @@ export async function requestJson(url, options = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(data?.message || "Khong the tai du lieu.");
+    throw new Error(data?.message || "Không thể tải dữ liệu.");
   }
 
   return data;
@@ -114,7 +114,7 @@ export async function requestAuthJson(url, options = {}) {
   const token = getStoredToken();
 
   if (!token) {
-    throw new Error("Ban chua dang nhap.");
+    throw new Error("Bạn chưa đăng nhập.");
   }
 
   return requestJson(url, {
