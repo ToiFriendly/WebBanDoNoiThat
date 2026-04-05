@@ -5,11 +5,11 @@
 services:
   # Backend API (Node.js/Express)
   backend:
-    image: ${DOCKERHUB_USERNAME}/webbandonoithat-backend:latest
+    image: ${DOCKERHUB_USERNAME}/webbandonoithat-backend:${IMAGE_TAG:-latest}
     container_name: noithat-backend
     restart: always
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     env_file:
       - ./backend/.env
     networks:
@@ -23,7 +23,7 @@ services:
 
   # Frontend (React/Vite + Nginx)
   frontend:
-    image: ${DOCKERHUB_USERNAME}/webbandonoithat-frontend:latest
+    image: ${DOCKERHUB_USERNAME}/webbandonoithat-frontend:${IMAGE_TAG:-latest}
     container_name: noithat-frontend
     restart: always
     ports:

@@ -3,7 +3,13 @@ function resolveApiBaseUrl() {
 
   if (!configuredBaseUrl) {
     if (typeof window !== "undefined") {
-      return `${window.location.protocol}//${window.location.hostname}:5000`;
+      const browserHostname = window.location.hostname;
+
+      if (["localhost", "127.0.0.1"].includes(browserHostname)) {
+        return `${window.location.protocol}//${browserHostname}:5000`;
+      }
+
+      return window.location.origin;
     }
 
     return "http://localhost:5000";

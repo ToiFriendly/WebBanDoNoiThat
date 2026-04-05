@@ -2,7 +2,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-import { clearStoredSession, saveStoredSession } from "../../utils/storefront";
+import { API_BASE_URL, clearStoredSession, saveStoredSession } from "../../utils/storefront";
 import AuthHero from "./AuthHero";
 import AuthTabs from "./AuthTabs";
 import LoginPanel from "./LoginPanel";
@@ -15,9 +15,11 @@ import {
   registerInitialState,
 } from "./authContent";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+
+function getRequestErrorMessage(error, fallbackMessage) {
+  return error.response?.data?.message || fallbackMessage;
+}
 
 function Login() {
   const navigate = useNavigate();

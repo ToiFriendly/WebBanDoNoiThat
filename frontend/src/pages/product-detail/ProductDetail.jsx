@@ -102,14 +102,14 @@ function ProductDetail() {
   const validImages = product ? getValidImages(product.images) : [];
   const activeImage = validImages[activeImageIndex] || "";
   const dimensions = product?.dimensions || {};
-  const dimensionText =
+  const DIMENSION_TEXT =
     dimensions.length || dimensions.width || dimensions.height
       ? `${dimensions.length || 0} × ${dimensions.width || 0} × ${dimensions.height || 0} ${dimensions.unit || "cm"}`
       : "";
 
-  const hasDiscount =
+  const HAS_DISCOUNT =
     product?.compareAtPrice && product.compareAtPrice > product.price;
-  const discountPercent = hasDiscount
+  const DISCOUNT_PERCENT = HAS_DISCOUNT
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
 
