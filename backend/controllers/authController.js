@@ -10,6 +10,14 @@ const slugify = require("../utils/slugify");
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const MAX_OTP_ATTEMPTS = 5;
 
+function logAuthError(scope, error) {
+  console.error(`[auth:${scope}]`, error?.message || error);
+
+  if (error?.stack) {
+    console.error(error.stack);
+  }
+}
+
 function createToken(userId) {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || "7d"
@@ -224,6 +232,7 @@ async function register(req, res) {
       user: sanitizeUser(user)
     });
   } catch (error) {
+    logAuthError("register", error);
     return res.status(500).json({
       message: "Khong the dang ky tai khoan.",
       error: error.message
@@ -281,6 +290,7 @@ async function login(req, res) {
       user: sanitizeUser(user)
     });
   } catch (error) {
+    logAuthError("login", error);
     return res.status(500).json({
       message: "Khong the dang nhap.",
       error: error.message
@@ -381,6 +391,7 @@ async function updateMe(req, res) {
       user: sanitizeUser(req.user)
     });
   } catch (error) {
+    logAuthError("updateMe", error);
     return res.status(500).json({
       message: "Khong the cap nhat thong tin ca nhan.",
       error: error.message
@@ -456,6 +467,7 @@ async function requestGoogleOtp(req, res) {
       expiresInMinutes: getOtpExpiryMinutes()
     });
   } catch (error) {
+    logAuthError("requestGoogleOtp", error);
     return res.status(500).json({
       message: "Khong the khoi tao dang nhap Google.",
       error: error.message
@@ -520,6 +532,7 @@ async function verifyGoogleOtp(req, res) {
       user: sanitizeUser(user)
     });
   } catch (error) {
+    logAuthError("verifyGoogleOtp", error);
     return res.status(500).json({
       message: "Khong the xac minh OTP.",
       error: error.message

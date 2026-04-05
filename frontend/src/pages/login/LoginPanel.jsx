@@ -37,6 +37,7 @@ export default function LoginPanel({
             updateForm("emailOrUsername", event.target.value)
           }
           placeholder="Nhap email hoac username"
+          autoComplete="username"
           required
         />
       </label>
@@ -49,6 +50,7 @@ export default function LoginPanel({
           value={loginForm.password}
           onChange={(event) => updateForm("password", event.target.value)}
           placeholder="Nhap mat khau"
+          autoComplete="current-password"
           required
         />
       </label>

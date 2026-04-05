@@ -24,6 +24,7 @@ function getRequestErrorMessage(error, fallbackMessage) {
 function Login() {
   const navigate = useNavigate();
   const googleButtonRef = useRef(null);
+  const googleInitializedRef = useRef(false);
   const [mode, setMode] = useState("login");
   const [loginForm, setLoginForm] = useState(loginInitialState);
   const [registerForm, setRegisterForm] = useState(registerInitialState);
@@ -172,10 +173,13 @@ function Login() {
         320;
       const buttonWidth = Math.max(260, Math.min(Math.floor(hostWidth), 360));
 
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCredential,
-      });
+      if (!googleInitializedRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCredential,
+        });
+        googleInitializedRef.current = true;
+      }
 
       googleButtonRef.current.innerHTML = "";
       window.google.accounts.id.renderButton(googleButtonRef.current, {
