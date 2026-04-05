@@ -85,6 +85,69 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      - name: Validate deployment secrets
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          BACKEND_ENV_FILE: ${{ secrets.BACKEND_ENV_FILE }}
+        run: |
+          set -eu
+
+          trim_secret() {
+            printf '%s' "$1" | tr -d '\r' | xargs
+          }
+
+          require_secret() {
+            local name="$1"
+            local value="$2"
+
+            if [ -z "$value" ]; then
+              echo "Missing required secret: $name" >&2
+              exit 1
+            fi
+          }
+
+          SERVER_HOST_CLEAN="$(trim_secret "${SERVER_HOST}")"
+          SERVER_USERNAME_CLEAN="$(trim_secret "${SERVER_USERNAME}")"
+          SERVER_PORT_CLEAN="$(trim_secret "${SERVER_PORT:-22}")"
+          DOCKERHUB_USERNAME_CLEAN="$(trim_secret "${DOCKERHUB_USERNAME}")"
+
+          require_secret "SERVER_HOST" "${SERVER_HOST_CLEAN}"
+          require_secret "SERVER_USERNAME" "${SERVER_USERNAME_CLEAN}"
+          require_secret "SERVER_PASSWORD" "${SERVER_PASSWORD}"
+          require_secret "DOCKERHUB_USERNAME" "${DOCKERHUB_USERNAME_CLEAN}"
+          require_secret "DOCKERHUB_TOKEN" "${DOCKERHUB_TOKEN}"
+
+          if [ -z "${SERVER_PORT_CLEAN}" ]; then
+            SERVER_PORT_CLEAN="22"
+          fi
+
+          case "${SERVER_PORT_CLEAN}" in
+            *[!0-9]*)
+              echo "SERVER_PORT must be numeric. Current value is invalid." >&2
+              exit 1
+              ;;
+          esac
+
+          if [ "${SERVER_PORT_CLEAN}" -lt 1 ] || [ "${SERVER_PORT_CLEAN}" -gt 65535 ]; then
+            echo "SERVER_PORT must be between 1 and 65535." >&2
+            exit 1
+          fi
+
+          if [ -z "$(printf '%s' "${BACKEND_ENV_FILE}" | tr -d '\r\n[:space:]')" ]; then
+            echo "Missing required secret: BACKEND_ENV_FILE" >&2
+            exit 1
+          fi
+
+          echo "SERVER_HOST_CLEAN=${SERVER_HOST_CLEAN}" >> "$GITHUB_ENV"
+          echo "SERVER_USERNAME_CLEAN=${SERVER_USERNAME_CLEAN}" >> "$GITHUB_ENV"
+          echo "SERVER_PORT_CLEAN=${SERVER_PORT_CLEAN}" >> "$GITHUB_ENV"
+          echo "DOCKERHUB_USERNAME_CLEAN=${DOCKERHUB_USERNAME_CLEAN}" >> "$GITHUB_ENV"
+
       - name: Install SSH tools
         run: |
           sudo apt-get update
@@ -92,7 +155,7 @@ jobs:
 
       - name: Prepare deployment bundle
         env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_USERNAME: ${{ env.DOCKERHUB_USERNAME_CLEAN }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           BACKEND_ENV_FILE: ${{ secrets.BACKEND_ENV_FILE }}
         run: |
@@ -114,9 +177,9 @@ jobs:
 
       - name: Upload deployment bundle
         env:
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_PORT: ${{ secrets.SERVER_PORT }}
-          SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+          SERVER_HOST: ${{ env.SERVER_HOST_CLEAN }}
+          SERVER_PORT: ${{ env.SERVER_PORT_CLEAN }}
+          SERVER_USERNAME: ${{ env.SERVER_USERNAME_CLEAN }}
           SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
         run: |
           set -eu
@@ -133,11 +196,11 @@ jobs:
 
       - name: Deploy containers
         env:
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_PORT: ${{ secrets.SERVER_PORT }}
-          SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+          SERVER_HOST: ${{ env.SERVER_HOST_CLEAN }}
+          SERVER_PORT: ${{ env.SERVER_PORT_CLEAN }}
+          SERVER_USERNAME: ${{ env.SERVER_USERNAME_CLEAN }}
           SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_USERNAME: ${{ env.DOCKERHUB_USERNAME_CLEAN }}
         run: |
           set -eu
           SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
