@@ -3,18 +3,18 @@
 # ============================================
 
 # Stage 1: Build dependencies
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files first (tận dụng Docker cache layer)
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json* ./
 
 # Cài dependencies (production only)
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Stage 2: Production image
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
