@@ -5,6 +5,8 @@ import CategoryProducts from "./pages/category-products/CategoryProducts";
 import Login from "./pages/login/Login";
 import Home from "./pages/home/Home";
 import MomoReturn from "./pages/momo-return/MomoReturn";
+import OrderHistory from "./pages/order-history/OrderHistory";
+import OrderTracking from "./pages/order-tracking/OrderTracking";
 import ProductDetail from "./pages/product-detail/ProductDetail";
 
 function App() {
@@ -14,6 +16,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/gio-hang" element={<Cart />} />
+        <Route path="/lich-su-don-hang" element={<OrderHistory />} />
+        <Route path="/theo-doi-don-hang" element={<OrderTracking />} />
+        <Route path="/theo-doi-don-hang/:orderCode" element={<OrderTracking />} />
         <Route path="/thanh-toan/momo" element={<MomoReturn />} />
         <Route path="/san-pham/:slug" element={<ProductDetail />} />
         <Route path="/danh-muc/:slug" element={<CategoryProducts />} />

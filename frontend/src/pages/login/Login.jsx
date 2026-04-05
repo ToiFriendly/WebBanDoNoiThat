@@ -92,9 +92,20 @@ function Login() {
       setRegisterForm(registerInitialState);
       resetGoogleFlow("login");
     } catch (error) {
+      if (error.response?.data?.message) {
+        setFeedback(error.response.data.message);
+        return;
+      }
+
+      if (error.code === "ERR_NETWORK") {
+        setFeedback(
+          "Khong the ket noi backend. Hay kiem tra backend dang chay va CLIENT_URL/CORS.",
+        );
+        return;
+      }
+
       setFeedback(
-        error.response?.data?.message ||
-          "Dang ky that bai. Email hoac username co the da ton tai.",
+        "Dang ky that bai. Vui long thu lai sau.",
       );
     } finally {
       setLoading(false);

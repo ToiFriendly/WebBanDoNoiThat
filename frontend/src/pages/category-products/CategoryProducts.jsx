@@ -6,6 +6,7 @@ import {
   fetchJson,
   formatCurrency,
   getDisplayImage,
+  resolveAssetUrl,
 } from "../../utils/storefront";
 
 function ProductCard({ product }) {
@@ -13,13 +14,13 @@ function ProductCard({ product }) {
 
   return (
     <Link
-      className="overflow-hidden rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 no-underline transition hover:-translate-y-1"
+      className="group overflow-hidden rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 no-underline transition hover:-translate-y-1"
       to={`/san-pham/${product.slug}`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(circle_at_top,rgba(255,246,234,0.92),rgba(236,215,190,0.75))] p-3">
         {image ? (
           <img
-            className="block h-full w-full object-cover"
+            className="block h-full w-full rounded-2xl object-contain transition duration-300 group-hover:scale-[1.03]"
             src={image}
             alt={product.name}
             loading="lazy"
@@ -90,6 +91,8 @@ function CategoryProducts() {
     };
   }, [slug]);
 
+  const categoryImage = resolveAssetUrl(category?.image);
+
   return (
     <main className="min-h-screen px-3 py-4 text-[#2f241f] md:px-6 md:py-6">
       <section className="mx-auto w-full max-w-[1180px] rounded-[32px] border border-[rgba(95,63,42,0.12)] bg-[rgba(255,251,245,0.82)] p-5 shadow-[0_20px_60px_rgba(79,52,35,0.08)] md:p-6">
@@ -121,10 +124,10 @@ function CategoryProducts() {
           <>
             <div className="grid gap-6 rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/70 p-6 lg:grid-cols-[0.85fr_1.15fr]">
               <div className="overflow-hidden rounded-[24px]">
-                {category?.image ? (
+                {categoryImage ? (
                   <img
-                    className="block aspect-[5/4] h-full w-full object-cover"
-                    src={category.image}
+                    className="block aspect-[5/4] h-full w-full rounded-2xl bg-[radial-gradient(circle_at_top,rgba(255,246,234,0.92),rgba(236,215,190,0.75))] p-3 object-contain"
+                    src={categoryImage}
                     alt={category.name}
                   />
                 ) : (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import StoreHeader from "../../components/StoreHeader";
 import {
@@ -7,6 +7,7 @@ import {
   fetchJson,
   formatCurrency,
   getDisplayImage,
+  getDisplayImages,
   getStoredSessionUser,
   requestAuthJson,
 } from "../../utils/storefront";
@@ -33,6 +34,7 @@ function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [cartSubmitting, setCartSubmitting] = useState(false);
   const [feedback, setFeedback] = useState("");
 
@@ -50,6 +52,7 @@ function ProductDetail() {
         if (isMounted) {
           setProduct(data.product || null);
           setQuantity(1);
+          setActiveImageIndex(0);
         }
       } catch (loadError) {
         if (isMounted) {
@@ -69,7 +72,13 @@ function ProductDetail() {
     };
   }, [slug]);
 
-  const image = product ? getDisplayImage(product.images) : "";
+  const galleryImages = useMemo(
+    () => (product ? getDisplayImages(product.images) : []),
+    [product],
+  );
+  const image =
+    galleryImages[Math.min(activeImageIndex, Math.max(galleryImages.length - 1, 0))] ||
+    getDisplayImage(product?.images);
   const dimensions = product?.dimensions || {};
   const dimensionText =
     dimensions.length || dimensions.width || dimensions.height
@@ -136,22 +145,48 @@ function ProductDetail() {
           </div>
         ) : product ? (
           <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="overflow-hidden rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/75">
-              <div className="aspect-[4/3] overflow-hidden">
-                {image ? (
-                  <img
-                    className="block h-full w-full object-cover"
-                    src={image}
-                    alt={product.name}
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-end bg-[linear-gradient(135deg,rgba(164,116,78,0.28),rgba(245,222,194,0.7))] p-6">
-                    <span className="rounded-full bg-white/75 px-3 py-2 text-sm font-bold">
-                      {product.category?.name || "San pham"}
-                    </span>
-                  </div>
-                )}
+            <div className="grid gap-4">
+              <div className="overflow-hidden rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/75">
+                <div className="aspect-[5/4] overflow-hidden bg-[radial-gradient(circle_at_top,rgba(255,246,234,0.92),rgba(236,215,190,0.75))] p-4 md:p-6">
+                  {image ? (
+                    <img
+                      className="block h-full w-full rounded-3xl object-contain"
+                      src={image}
+                      alt={product.name}
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-end rounded-3xl bg-[linear-gradient(135deg,rgba(164,116,78,0.28),rgba(245,222,194,0.7))] p-6">
+                      <span className="rounded-full bg-white/75 px-3 py-2 text-sm font-bold">
+                        {product.category?.name || "San pham"}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {galleryImages.length > 1 ? (
+                <div className="grid grid-cols-4 gap-3 md:grid-cols-5">
+                  {galleryImages.map((galleryImage, index) => (
+                    <button
+                      key={galleryImage}
+                      type="button"
+                      className={`overflow-hidden rounded-2xl border p-1.5 transition ${
+                        index === activeImageIndex
+                          ? "border-[#8c5f3f] bg-[#fff3e5]"
+                          : "border-[rgba(95,63,42,0.12)] bg-white/70 hover:-translate-y-0.5"
+                      }`}
+                      onClick={() => setActiveImageIndex(index)}
+                    >
+                      <img
+                        className="block aspect-square w-full rounded-xl object-contain"
+                        src={galleryImage}
+                        alt={`${product.name} ${index + 1}`}
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
 
             <div className="grid gap-5">

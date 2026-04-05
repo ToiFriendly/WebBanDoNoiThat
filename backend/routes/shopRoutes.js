@@ -5,6 +5,8 @@ const {
   clearCartItems,
   getCart,
   getOrderDetail,
+  listOrders,
+  getSimilarProducts,
   handleMomoPaymentResult,
   removeCartItem,
   updateCartItem
@@ -19,6 +21,8 @@ router.post("/payments/momo/return", handleMomoPaymentResult);
 router.use(authenticateToken);
 
 router.get("/cart", getCart);
+router.get("/orders", listOrders);
+router.get("/recommendations/similar", getSimilarProducts);
 router.post("/cart/items", addToCart);
 router.patch("/cart/items/:productId", updateCartItem);
 router.delete("/cart/items/:productId", removeCartItem);

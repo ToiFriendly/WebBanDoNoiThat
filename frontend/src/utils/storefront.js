@@ -49,13 +49,64 @@ export function formatCurrency(price) {
   }).format(price);
 }
 
-export function getDisplayImage(images = []) {
-  const validImage = images.find(
-    (image) =>
-      image && typeof image === "string" && !image.includes("placehold.co"),
-  );
+export function resolveAssetUrl(value = "") {
+  const normalizedValue = String(value || "").trim();
 
-  return validImage || "";
+  if (!normalizedValue) {
+    return "";
+  }
+
+  if (
+    normalizedValue.startsWith("http://") ||
+    normalizedValue.startsWith("https://") ||
+    normalizedValue.startsWith("data:") ||
+    normalizedValue.startsWith("blob:")
+  ) {
+    return normalizedValue;
+  }
+
+  if (normalizedValue.startsWith("//")) {
+    return `https:${normalizedValue}`;
+  }
+
+  if (normalizedValue.startsWith("/")) {
+    return `${API_BASE_URL}${normalizedValue}`;
+  }
+
+  return `${API_BASE_URL}/${normalizedValue}`;
+}
+
+export function getDisplayImages(images = []) {
+  const sourceImages = Array.isArray(images)
+    ? images
+    : typeof images === "string"
+      ? images.split(",")
+      : [];
+
+  const validImages = sourceImages
+    .map((image) => resolveAssetUrl(image))
+    .filter(
+      (image) =>
+        image && typeof image === "string" && !image.includes("placehold.co"),
+    );
+
+  return Array.from(new Set(validImages));
+}
+
+export function getDisplayImage(images = []) {
+  return getDisplayImages(images)[0] || "";
+}
+
+export function getFirstDisplayImage(...imageSources) {
+  for (const imageSource of imageSources) {
+    const image = getDisplayImage(imageSource);
+
+    if (image) {
+      return image;
+    }
+  }
+
+  return "";
 }
 
 export function formatDateTime(value) {

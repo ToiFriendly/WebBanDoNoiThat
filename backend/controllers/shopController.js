@@ -153,6 +153,37 @@ function mapOrder(order) {
   };
 }
 
+function parseRecommendLimit(value, fallback = 8) {
+  const parsedValue = Number(value);
+
+  if (!Number.isInteger(parsedValue) || parsedValue <= 0) {
+    return fallback;
+  }
+
+  return Math.min(parsedValue, 16);
+}
+
+function mapRecommendedProduct(product) {
+  return {
+    _id: product._id,
+    name: product.name,
+    slug: product.slug,
+    shortDescription: product.shortDescription,
+    images: product.images,
+    price: product.price,
+    compareAtPrice: product.compareAtPrice,
+    quantityInStock: product.quantityInStock,
+    isFeatured: product.isFeatured,
+    category: product.category
+      ? {
+          _id: product.category._id,
+          name: product.category.name,
+          slug: product.category.slug
+        }
+      : null
+  };
+}
+
 async function findCartByUser(userId, session) {
   return Cart.findOne({ user: userId }).session(session || null);
 }
@@ -347,6 +378,21 @@ async function loadOrderByCode(orderCode, userId) {
   });
 }
 
+async function loadOrdersByUser(userId) {
+  return Order.find({
+    user: userId,
+    isDeleted: false
+  })
+    .sort({ placedAt: -1, createdAt: -1 })
+    .populate({
+      path: "items",
+      populate: {
+        path: "product",
+        select: "name slug images"
+      }
+    });
+}
+
 function mergeOrderItemsBackToCart(cart, orderItems) {
   const mergedItems = [...cart.items];
 
@@ -514,6 +560,72 @@ async function getCart(req, res, next) {
   try {
     const cart = await loadCartForResponse(req.user._id);
     return res.status(200).json({ cart });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getSimilarProducts(req, res, next) {
+  try {
+    const limit = parseRecommendLimit(req.query.limit, 8);
+    const cart = await Cart.findOne({ user: req.user._id }).populate(
+      "items.product",
+      "category"
+    );
+    const cartProductIds = Array.isArray(cart?.items)
+      ? cart.items
+          .map((item) => item.product?._id)
+          .filter(Boolean)
+      : [];
+    const cartProductIdStrings = cartProductIds.map((id) => id.toString());
+    const cartCategoryIdStrings = Array.from(
+      new Set(
+        (cart?.items || [])
+          .map((item) => item.product?.category)
+          .filter(Boolean)
+          .map((id) => id.toString())
+      )
+    );
+    const sameCategoryFilter = {
+      status: "active",
+      isDeleted: false,
+      _id: { $nin: cartProductIds },
+      category: { $in: cartCategoryIdStrings }
+    };
+    const fallbackFilter = {
+      status: "active",
+      isDeleted: false,
+      _id: { $nin: cartProductIds }
+    };
+    const sameCategoryProducts = cartCategoryIdStrings.length
+      ? await Product.find(sameCategoryFilter)
+          .populate("category", "name slug")
+          .sort({ isFeatured: -1, updatedAt: -1, createdAt: -1 })
+          .limit(limit)
+      : [];
+    const foundProductIds = new Set([
+      ...cartProductIdStrings,
+      ...sameCategoryProducts.map((product) => product._id.toString())
+    ]);
+    let products = [...sameCategoryProducts];
+
+    if (products.length < limit) {
+      const fallbackProducts = await Product.find({
+        ...fallbackFilter,
+        _id: {
+          $nin: Array.from(foundProductIds)
+        }
+      })
+        .populate("category", "name slug")
+        .sort({ isFeatured: -1, updatedAt: -1, createdAt: -1 })
+        .limit(limit - products.length);
+
+      products = [...products, ...fallbackProducts];
+    }
+
+    return res.status(200).json({
+      products: products.map(mapRecommendedProduct)
+    });
   } catch (error) {
     return next(error);
   }
@@ -766,6 +878,18 @@ async function getOrderDetail(req, res, next) {
   }
 }
 
+async function listOrders(req, res, next) {
+  try {
+    const orders = await loadOrdersByUser(req.user._id);
+
+    return res.status(200).json({
+      orders: orders.map(mapOrder)
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function handleMomoPaymentResult(req, res, next) {
   try {
     const order = await finalizeMomoResult(req.body || {});
@@ -789,6 +913,8 @@ module.exports = {
   clearCartItems,
   getCart,
   getOrderDetail,
+  listOrders,
+  getSimilarProducts,
   handleMomoPaymentResult,
   removeCartItem,
   updateCartItem

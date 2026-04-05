@@ -159,17 +159,25 @@ function MomoReturn() {
           ) : null}
 
           <div className="mt-6 flex flex-wrap gap-3">
+            {order?.orderCode || orderCode ? (
+              <Link
+                to={`/theo-doi-don-hang/${order?.orderCode || orderCode}`}
+                className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#2f241f] px-5 font-bold text-[#fff8f0] no-underline"
+              >
+                Theo doi don hang
+              </Link>
+            ) : null}
             <Link
               to="/"
-              className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#2f241f] px-5 font-bold text-[#fff8f0] no-underline"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-[rgba(95,63,42,0.18)] bg-white/80 px-5 font-bold no-underline"
             >
               Ve trang chu
             </Link>
             <Link
-              to="/gio-hang"
+              to="/lich-su-don-hang"
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-[rgba(95,63,42,0.18)] bg-white/80 px-5 font-bold no-underline"
             >
-              Ve gio hang
+              Lich su don
             </Link>
           </div>
         </div>

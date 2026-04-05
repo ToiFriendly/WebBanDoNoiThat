@@ -14,11 +14,48 @@ const requestLogger = require("./middlewares/requestLogger");
 
 const app = express();
 const port = process.env.PORT || 5000;
+const defaultDevOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5174"
+];
+
+function getAllowedOrigins() {
+  const rawValue = process.env.CLIENT_URLS || process.env.CLIENT_URL || "";
+  const configuredOrigins = rawValue
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (configuredOrigins.length > 0) {
+    return configuredOrigins;
+  }
+
+  return defaultDevOrigins;
+}
+
+const allowedOrigins = getAllowedOrigins();
+const localOriginPattern = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/i;
 
 app.use(requestLogger);
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173"
+    origin(origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      if (process.env.NODE_ENV !== "production" && localOriginPattern.test(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Origin is not allowed by CORS."));
+    }
   })
 );
 app.use(express.json());

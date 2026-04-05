@@ -5,6 +5,7 @@ import {
   API_BASE_URL,
   formatCurrency,
   getDisplayImage,
+  resolveAssetUrl,
 } from "../../utils/storefront";
 
 function ProductCard({ product }) {
@@ -12,13 +13,13 @@ function ProductCard({ product }) {
 
   return (
     <Link
-      className="overflow-hidden rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 no-underline transition hover:-translate-y-1"
+      className="group overflow-hidden rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 no-underline transition hover:-translate-y-1"
       to={`/san-pham/${product.slug}`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(circle_at_top,rgba(255,246,234,0.92),rgba(236,215,190,0.75))] p-3">
         {image ? (
           <img
-            className="block h-full w-full object-cover"
+            className="block h-full w-full rounded-2xl object-contain transition duration-300 group-hover:scale-[1.03]"
             src={image}
             alt={product.name}
             loading="lazy"
@@ -60,26 +61,27 @@ function ProductCard({ product }) {
 }
 
 function CategoryCard({ category }) {
+  const categoryImage = resolveAssetUrl(category.image);
   const hasRealImage =
-    category.image &&
-    typeof category.image === "string" &&
-    !category.image.includes("placehold.co");
+    categoryImage &&
+    typeof categoryImage === "string" &&
+    !categoryImage.includes("placehold.co");
 
   return (
     <Link
-      className="overflow-hidden rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 no-underline transition hover:-translate-y-1"
+      className="group overflow-hidden rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 no-underline transition hover:-translate-y-1"
       to={`/danh-muc/${category.slug}`}
     >
-      <div className="relative aspect-[5/4] overflow-hidden">
+      <div className="relative aspect-[5/4] overflow-hidden bg-[radial-gradient(circle_at_top,rgba(255,246,234,0.92),rgba(236,215,190,0.75))] p-3">
         {hasRealImage ? (
           <img
-            className="block h-full w-full object-cover"
-            src={category.image}
+            className="block h-full w-full rounded-2xl object-contain transition duration-300 group-hover:scale-[1.03]"
+            src={categoryImage}
             alt={category.name}
             loading="lazy"
           />
         ) : (
-          <div className="h-full w-full bg-[linear-gradient(135deg,rgba(164,116,78,0.28),rgba(245,222,194,0.7))]" />
+          <div className="h-full w-full rounded-2xl bg-[linear-gradient(135deg,rgba(164,116,78,0.28),rgba(245,222,194,0.7))]" />
         )}
       </div>
       <div className="p-5">
