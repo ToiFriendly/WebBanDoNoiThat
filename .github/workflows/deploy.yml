@@ -111,7 +111,9 @@ jobs:
             fi
           }
 
-          SERVER_HOST_CLEAN="$(trim_secret "${SERVER_HOST}")"
+          SERVER_HOST_RAW="$(trim_secret "${SERVER_HOST}")"
+          # Strip port if user accidentally included it in SERVER_HOST (e.g. 139.99.92.118:22)
+          SERVER_HOST_CLEAN="${SERVER_HOST_RAW%:*}"
           SERVER_USERNAME_CLEAN="$(trim_secret "${SERVER_USERNAME}")"
           SERVER_PORT_CLEAN="$(trim_secret "${SERVER_PORT:-22}")"
           DOCKERHUB_USERNAME_CLEAN="$(trim_secret "${DOCKERHUB_USERNAME}")"
