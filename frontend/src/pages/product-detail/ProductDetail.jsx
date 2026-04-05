@@ -7,6 +7,9 @@ import {
   API_BASE_URL,
   fetchJson,
   formatCurrency,
+  requestAuthJson,
+  emitCartChanged,
+  getStoredSessionUser,
 } from "../../utils/storefront";
 
 function getValidImages(images = []) {
@@ -32,6 +35,36 @@ function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [cartFeedback, setCartFeedback] = useState({ type: "", message: "" });
+  const sessionUser = getStoredSessionUser();
+
+  async function handleAddToCart() {
+    if (!product || addingToCart) return;
+
+    try {
+      setAddingToCart(true);
+      setCartFeedback({ type: "", message: "" });
+      await requestAuthJson(`${API_BASE_URL}/api/shop/cart/items`, {
+        method: "POST",
+        body: { productId: product._id, quantity },
+      });
+      emitCartChanged();
+      setCartFeedback({
+        type: "success",
+        message: `Đã thêm ${quantity} "${product.name}" vào giỏ hàng!`,
+      });
+      setQuantity(1);
+    } catch (err) {
+      setCartFeedback({
+        type: "error",
+        message: err.message || "Không thể thêm vào giỏ hàng.",
+      });
+    } finally {
+      setAddingToCart(false);
+    }
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -79,27 +112,6 @@ function ProductDetail() {
   const discountPercent = hasDiscount
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
-
-    try {
-      setCartSubmitting(true);
-      setFeedback("");
-
-      await requestAuthJson(`${API_BASE_URL}/api/shop/cart/items`, {
-        method: "POST",
-        body: {
-          productId: product._id,
-          quantity,
-        },
-      });
-
-      emitCartChanged();
-      setFeedback("Đã thêm sản phẩm vào giỏ hàng.");
-    } catch (cartError) {
-      setFeedback(cartError.message || "Không thể thêm vào giỏ hàng.");
-    } finally {
-      setCartSubmitting(false);
-    }
-  }
 
   return (
     <main className="pd-page">
@@ -158,10 +170,10 @@ function ProductDetail() {
             <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
               <div className="overflow-hidden rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/75">
                 <div className="aspect-[4/3] overflow-hidden">
-                  {image ? (
+                  {activeImage ? (
                     <img
                       className="block h-full w-full object-cover"
-                      src={image}
+                      src={activeImage}
                       alt={product.name}
                     />
                   ) : (
@@ -198,76 +210,124 @@ function ProductDetail() {
                     {product.quantityInStock > 0 ? "Còn hàng" : "Tạm hết hàng"}
                   </span>
                 </div>
-
-                <div className="rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/70 p-5">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <div className="text-sm text-[#6a564b]">Số lượng muốn mua</div>
-                      <div className="mt-3 flex items-center gap-3">
-                        <button
-                          type="button"
-                          className="rounded-full border border-[rgba(95,63,42,0.14)] bg-white/80 px-4 py-2"
-                          onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                          disabled={cartSubmitting || product.quantityInStock <= 0}
-                        >
-                          -
-                        </button>
-                        <input
-                          className="w-24 rounded-full border border-[rgba(95,63,42,0.14)] bg-white/80 px-4 py-2 text-center outline-none"
-                          type="number"
-                          min="1"
-                          max={Math.max(1, product.quantityInStock)}
-                          value={quantity}
-                          onChange={(event) =>
-                            setQuantity(Math.max(1, Number(event.target.value) || 1))
-                          }
-                          disabled={cartSubmitting || product.quantityInStock <= 0}
-                        />
-                        <button
-                          type="button"
-                          className="rounded-full border border-[rgba(95,63,42,0.14)] bg-white/80 px-4 py-2"
-                          onClick={() => setQuantity((prev) => prev + 1)}
-                          disabled={cartSubmitting || product.quantityInStock <= 0}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#2f241f] px-6 font-bold text-[#fff8f0] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
-                      onClick={handleAddToCart}
-                      disabled={cartSubmitting || product.quantityInStock <= 0}
-                    >
-                      {cartSubmitting ? "Đang thêm..." : "Thêm vào giỏ hàng"}
-                    </button>
-                  </div>
-
-                  <p className="mt-4 text-sm leading-6 text-[#6a564b]">
-                    Hệ thống chỉ kiểm tra tồn kho khi thêm vào giỏ. Kho chỉ bị trừ
-                    trong giao dịch lúc đặt hàng.
-                  </p>
-
-                  {feedback ? (
-                    <div className="mt-4 rounded-2xl bg-[#f5ebde] px-4 py-3 text-[#734d36]">
-                      {feedback}
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <InfoBlock label="Danh mục" value={product.category?.name} />
-                  <InfoBlock label="SKU" value={product.sku} />
-                  <InfoBlock label="Chất liệu" value={product.material} />
-                  <InfoBlock label="Phong cách" value={product.style} />
-                  <InfoBlock label="Màu sắc" value={product.color} />
-                  <InfoBlock label="Kích thước" value={dimensionText} />
-                </div>
               </div>
             </div>
 
-            <CustomerReviewsSection product={product} heroImage={image} />
+            <div className="pd-purchase">
+              <div className="pd-purchase__eyebrow">Mua hàng</div>
+              <div className="pd-purchase__body">
+                <div>
+                  <div className="pd-purchase__stock">
+                    {product.quantityInStock > 0
+                      ? `Còn ${product.quantityInStock} sản phẩm trong kho`
+                      : "Sản phẩm hiện đang tạm hết hàng"}
+                  </div>
+
+                  {cartFeedback.message && (
+                    <p
+                      className="pd-purchase__feedback"
+                      style={{
+                        color: cartFeedback.type === "success" ? "#2f7f41" : "#91412a",
+                        background: cartFeedback.type === "success"
+                          ? "rgba(50, 135, 72, 0.08)"
+                          : "rgba(176, 61, 40, 0.06)",
+                        borderRadius: "12px",
+                        padding: "0.65rem 1rem",
+                        margin: "0.75rem 0 0",
+                        fontSize: "0.88rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {cartFeedback.message}
+                    </p>
+                  )}
+                </div>
+
+                {sessionUser ? (
+                  <div className="pd-purchase__actions">
+                    {product.quantityInStock > 0 && (
+                      <>
+                        <div className="pd-purchase__qty">
+                          <button
+                            type="button"
+                            className="pd-purchase__qty-btn"
+                            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                            disabled={addingToCart || quantity <= 1}
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            className="pd-purchase__qty-input"
+                            min="1"
+                            max={product.quantityInStock}
+                            value={quantity}
+                            onChange={(e) =>
+                              setQuantity(
+                                Math.max(1, Math.min(product.quantityInStock, Number(e.target.value) || 1))
+                              )
+                            }
+                            disabled={addingToCart}
+                          />
+                          <button
+                            type="button"
+                            className="pd-purchase__qty-btn"
+                            onClick={() =>
+                              setQuantity((q) => Math.min(product.quantityInStock, q + 1))
+                            }
+                            disabled={addingToCart || quantity >= product.quantityInStock}
+                          >
+                            +
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          className="pd-purchase__primary"
+                          onClick={handleAddToCart}
+                          disabled={addingToCart}
+                        >
+                          {addingToCart ? (
+                            <>
+                              <span className="pd-purchase__spinner" />
+                              Đang thêm...
+                            </>
+                          ) : (
+                            <>
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                                <line x1="3" y1="6" x2="21" y2="6" />
+                                <path d="M16 10a4 4 0 0 1-8 0" />
+                              </svg>
+                              Thêm vào giỏ hàng
+                            </>
+                          )}
+                        </button>
+                      </>
+                    )}
+                    <Link className="pd-purchase__secondary" to="/gio-hang">
+                      Xem giỏ hàng
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="pd-purchase__actions">
+                    <Link className="pd-purchase__primary" to="/login">
+                      Đăng nhập để mua hàng
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <CustomerReviewsSection product={product} heroImage={activeImage} />
 
             <div className="mt-8 grid gap-5">
               <div className="rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/70 p-5">
