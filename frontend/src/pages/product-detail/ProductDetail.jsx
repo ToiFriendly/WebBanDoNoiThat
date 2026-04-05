@@ -2,6 +2,7 @@ import "./ProductDetail.css";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import StoreHeader from "../../components/StoreHeader";
+import CustomerReviewsSection from "./CustomerReviewsSection";
 import {
   API_BASE_URL,
   fetchJson,
@@ -112,54 +113,34 @@ function ProductDetail() {
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
     : 0;
 
-  const specs = product
-    ? [
-        { label: "Danh mục", value: product.category?.name },
-        { label: "SKU", value: product.sku },
-        { label: "Chất liệu", value: product.material },
-        { label: "Phong cách", value: product.style },
-        { label: "Màu sắc", value: product.color },
-        { label: "Kích thước", value: dimensionText },
-      ].filter((s) => s.value)
-    : [];
-
   return (
     <main className="pd-page">
       <section className="pd-container">
         <StoreHeader />
 
-        {/* Breadcrumb */}
-        <nav className="pd-breadcrumb">
-          <Link to="/">Trang chủ</Link>
-          <svg className="pd-breadcrumb__sep" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-          <Link to="/san-pham">Sản phẩm</Link>
-          {product?.category?.slug && (
+        <div className="mb-8 flex flex-wrap items-center gap-2 text-sm text-[#8c6a4c]">
+          <Link className="no-underline transition hover:text-[#2f241f]" to="/">
+            Trang chủ
+          </Link>
+          {product?.category?.slug ? (
             <>
-              <svg className="pd-breadcrumb__sep" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-              <Link to={`/danh-muc/${product.category.slug}`}>
+              <span>/</span>
+              <Link
+                className="no-underline transition hover:text-[#2f241f]"
+                to={`/danh-muc/${product.category.slug}`}
+              >
                 {product.category.name}
               </Link>
             </>
-          )}
-          {product && (
-            <>
-              <svg className="pd-breadcrumb__sep" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-              <span className="pd-breadcrumb__current">{product.name}</span>
-            </>
-          )}
-        </nav>
+          ) : null}
+          {product?.name ? <span>/</span> : null}
+          {product?.name ? <span>{product.name}</span> : null}
+        </div>
 
         {/* States */}
         {loading ? (
-          <div className="pd-loading">
-            <div className="pd-loading__spinner" />
-            <p>Đang tải chi tiết sản phẩm...</p>
+          <div className="rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 p-6">
+            Đang tải chi tiết sản phẩm...
           </div>
         ) : error ? (
           <div className="pd-error">
@@ -185,254 +166,176 @@ function ProductDetail() {
             </Link>
           </div>
         ) : product ? (
-          <div className="pd-main">
-            {/* ===== LEFT: Gallery ===== */}
-            <div className="pd-gallery">
-              <div className="pd-gallery__main">
-                {activeImage ? (
-                  <img
-                    className="pd-gallery__main-img"
-                    src={activeImage}
-                    alt={product.name}
-                  />
-                ) : (
-                  <div className="pd-gallery__placeholder">
-                    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                  </div>
-                )}
-
-                {/* Badges */}
-                <div className="pd-gallery__badge">
-                  {product.isFeatured && (
-                    <span className="pd-gallery__badge-item pd-gallery__badge-featured">
-                      ★ Nổi bật
-                    </span>
+          <>
+            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="overflow-hidden rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/75">
+                <div className="aspect-[4/3] overflow-hidden">
+                  {activeImage ? (
+                    <img
+                      className="block h-full w-full object-cover"
+                      src={activeImage}
+                      alt={product.name}
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-end bg-[linear-gradient(135deg,rgba(164,116,78,0.28),rgba(245,222,194,0.7))] p-6">
+                      <span className="rounded-full bg-white/75 px-3 py-2 text-sm font-bold">
+                        {product.category?.name || "Sản phẩm"}
+                      </span>
+                    </div>
                   )}
-                  <span
-                    className={`pd-gallery__badge-item ${
-                      product.quantityInStock > 0
-                        ? "pd-gallery__badge-stock"
-                        : "pd-gallery__badge-out"
-                    }`}
-                  >
-                    {product.quantityInStock > 0
-                      ? `Còn ${product.quantityInStock} sản phẩm`
-                      : "Tạm hết hàng"}
+                </div>
+              </div>
+
+              <div className="grid gap-5">
+                <div>
+                  <p className="text-xs tracking-[0.16em] text-[#8b6243] uppercase">
+                    Chi tiết sản phẩm
+                  </p>
+                  <h1 className="mt-3 text-4xl font-semibold md:text-5xl">
+                    {product.name}
+                  </h1>
+                  <p className="mt-4 text-lg leading-8 text-[#5c4a40]">
+                    {product.shortDescription || "Sản phẩm này chưa có mô tả ngắn."}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <strong className="text-3xl">{formatCurrency(product.price)}</strong>
+                  {product.compareAtPrice > product.price ? (
+                    <span className="text-lg text-[#8b6243] line-through">
+                      {formatCurrency(product.compareAtPrice)}
+                    </span>
+                  ) : null}
+                  <span className="rounded-full bg-[#f3e5d7] px-4 py-2 text-sm font-semibold">
+                    {product.quantityInStock > 0 ? "Còn hàng" : "Tạm hết hàng"}
                   </span>
                 </div>
               </div>
-
-              {/* Thumbnails */}
-              {validImages.length > 1 && (
-                <div className="pd-gallery__thumbs">
-                  {validImages.map((img, index) => (
-                    <button
-                      key={img}
-                      type="button"
-                      className={`pd-gallery__thumb ${
-                        index === activeImageIndex ? "pd-gallery__thumb--active" : ""
-                      }`}
-                      onClick={() => setActiveImageIndex(index)}
-                    >
-                      <img src={img} alt={`${product.name} ${index + 1}`} />
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* ===== RIGHT: Info ===== */}
-            <div className="pd-info">
-              {/* Category */}
-              {product.category?.slug && (
-                <Link
-                  className="pd-info__category"
-                  to={`/danh-muc/${product.category.slug}`}
-                >
-                  <span className="pd-info__category-dot" />
-                  {product.category.name}
-                </Link>
-              )}
-
-              {/* Title */}
-              <h1 className="pd-info__title">{product.name}</h1>
-
-              {/* Short Description */}
-              {product.shortDescription && (
-                <p className="pd-info__short-desc">{product.shortDescription}</p>
-              )}
-
-              {/* Price */}
-              <div className="pd-price">
-                <span className="pd-price__current">
-                  {formatCurrency(product.price)}
-                </span>
-                {hasDiscount && (
-                  <>
-                    <span className="pd-price__original">
-                      {formatCurrency(product.compareAtPrice)}
-                    </span>
-                    <span className="pd-price__discount">-{discountPercent}%</span>
-                  </>
-                )}
-              </div>
-
-              <hr className="pd-divider" />
-
-              <div className="pd-purchase">
-                <div className="pd-purchase__eyebrow">Mua hàng</div>
-                <div className="pd-purchase__body">
-                  <div>
-                    <div className="pd-purchase__stock">
-                      {product.quantityInStock > 0
-                        ? `Còn ${product.quantityInStock} sản phẩm trong kho`
-                        : "Sản phẩm hiện đang tạm hết hàng"}
-                    </div>
-
-                    {cartFeedback.message && (
-                      <p
-                        className="pd-purchase__feedback"
-                        style={{
-                          color: cartFeedback.type === "success" ? "#2f7f41" : "#91412a",
-                          background: cartFeedback.type === "success"
-                            ? "rgba(50, 135, 72, 0.08)"
-                            : "rgba(176, 61, 40, 0.06)",
-                          borderRadius: "12px",
-                          padding: "0.65rem 1rem",
-                          margin: "0.75rem 0 0",
-                          fontSize: "0.88rem",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {cartFeedback.message}
-                      </p>
-                    )}
+            <div className="pd-purchase">
+              <div className="pd-purchase__eyebrow">Mua hàng</div>
+              <div className="pd-purchase__body">
+                <div>
+                  <div className="pd-purchase__stock">
+                    {product.quantityInStock > 0
+                      ? `Còn ${product.quantityInStock} sản phẩm trong kho`
+                      : "Sản phẩm hiện đang tạm hết hàng"}
                   </div>
 
-                  {sessionUser ? (
-                    <div className="pd-purchase__actions">
-                      {product.quantityInStock > 0 && (
-                        <>
-                          <div className="pd-purchase__qty">
-                            <button
-                              type="button"
-                              className="pd-purchase__qty-btn"
-                              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                              disabled={addingToCart || quantity <= 1}
-                            >
-                              −
-                            </button>
-                            <input
-                              type="number"
-                              className="pd-purchase__qty-input"
-                              min="1"
-                              max={product.quantityInStock}
-                              value={quantity}
-                              onChange={(e) =>
-                                setQuantity(
-                                  Math.max(1, Math.min(product.quantityInStock, Number(e.target.value) || 1))
-                                )
-                              }
-                              disabled={addingToCart}
-                            />
-                            <button
-                              type="button"
-                              className="pd-purchase__qty-btn"
-                              onClick={() =>
-                                setQuantity((q) => Math.min(product.quantityInStock, q + 1))
-                              }
-                              disabled={addingToCart || quantity >= product.quantityInStock}
-                            >
-                              +
-                            </button>
-                          </div>
-                          <button
-                            type="button"
-                            className="pd-purchase__primary"
-                            onClick={handleAddToCart}
-                            disabled={addingToCart}
-                          >
-                            {addingToCart ? (
-                              <>
-                                <span className="pd-purchase__spinner" />
-                                Đang thêm...
-                              </>
-                            ) : (
-                              <>
-                                <svg
-                                  width="18"
-                                  height="18"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                                  <line x1="3" y1="6" x2="21" y2="6" />
-                                  <path d="M16 10a4 4 0 0 1-8 0" />
-                                </svg>
-                                Thêm vào giỏ hàng
-                              </>
-                            )}
-                          </button>
-                        </>
-                      )}
-                      <Link className="pd-purchase__secondary" to="/gio-hang">
-                        Xem giỏ hàng
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="pd-purchase__actions">
-                      <Link className="pd-purchase__primary" to="/login">
-                        Đăng nhập để mua hàng
-                      </Link>
-                    </div>
+                  {cartFeedback.message && (
+                    <p
+                      className="pd-purchase__feedback"
+                      style={{
+                        color: cartFeedback.type === "success" ? "#2f7f41" : "#91412a",
+                        background: cartFeedback.type === "success"
+                          ? "rgba(50, 135, 72, 0.08)"
+                          : "rgba(176, 61, 40, 0.06)",
+                        borderRadius: "12px",
+                        padding: "0.65rem 1rem",
+                        margin: "0.75rem 0 0",
+                        fontSize: "0.88rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {cartFeedback.message}
+                    </p>
                   )}
                 </div>
+
+                {sessionUser ? (
+                  <div className="pd-purchase__actions">
+                    {product.quantityInStock > 0 && (
+                      <>
+                        <div className="pd-purchase__qty">
+                          <button
+                            type="button"
+                            className="pd-purchase__qty-btn"
+                            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                            disabled={addingToCart || quantity <= 1}
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            className="pd-purchase__qty-input"
+                            min="1"
+                            max={product.quantityInStock}
+                            value={quantity}
+                            onChange={(e) =>
+                              setQuantity(
+                                Math.max(1, Math.min(product.quantityInStock, Number(e.target.value) || 1))
+                              )
+                            }
+                            disabled={addingToCart}
+                          />
+                          <button
+                            type="button"
+                            className="pd-purchase__qty-btn"
+                            onClick={() =>
+                              setQuantity((q) => Math.min(product.quantityInStock, q + 1))
+                            }
+                            disabled={addingToCart || quantity >= product.quantityInStock}
+                          >
+                            +
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          className="pd-purchase__primary"
+                          onClick={handleAddToCart}
+                          disabled={addingToCart}
+                        >
+                          {addingToCart ? (
+                            <>
+                              <span className="pd-purchase__spinner" />
+                              Đang thêm...
+                            </>
+                          ) : (
+                            <>
+                              <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                                <line x1="3" y1="6" x2="21" y2="6" />
+                                <path d="M16 10a4 4 0 0 1-8 0" />
+                              </svg>
+                              Thêm vào giỏ hàng
+                            </>
+                          )}
+                        </button>
+                      </>
+                    )}
+                    <Link className="pd-purchase__secondary" to="/gio-hang">
+                      Xem giỏ hàng
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="pd-purchase__actions">
+                    <Link className="pd-purchase__primary" to="/login">
+                      Đăng nhập để mua hàng
+                    </Link>
+                  </div>
+                )}
               </div>
+            </div>
 
-              {/* Specs */}
-              {specs.length > 0 && (
-                <>
-                  <hr className="pd-divider" />
-                  <div className="pd-specs">
-                    {specs.map((spec) => (
-                      <SpecItem
-                        key={spec.label}
-                        label={spec.label}
-                        value={spec.value}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
+            <CustomerReviewsSection product={product} heroImage={activeImage} />
 
-              {/* Description */}
-              {product.description && (
-                <>
-                  <hr className="pd-divider" />
-                  <div className="pd-description">
-                    <h2 className="pd-description__title">
-                      <span className="pd-description__title-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                          <polyline points="14 2 14 8 20 8" />
-                          <line x1="16" y1="13" x2="8" y2="13" />
-                          <line x1="16" y1="17" x2="8" y2="17" />
-                        </svg>
-                      </span>
-                      Mô tả chi tiết
-                    </h2>
-                    <div className="pd-description__body">{product.description}</div>
-                  </div>
-                </>
-              )}
+            <div className="mt-8 grid gap-5">
+              <div className="rounded-[28px] border border-[rgba(95,63,42,0.1)] bg-white/70 p-5">
+                <h2 className="text-2xl font-semibold">Mô tả chi tiết</h2>
+                <p className="mt-4 leading-8 text-[#5c4a40]">
+                  {product.description || "Sản phẩm này chưa có mô tả chi tiết."}
+                </p>
+              </div>
 
               {/* Tags */}
               {product.tags?.length > 0 && (
@@ -449,7 +352,7 @@ function ProductDetail() {
                 </div>
               )}
             </div>
-          </div>
+          </>
         ) : null}
       </section>
     </main>
