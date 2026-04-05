@@ -183,6 +183,12 @@ function Home() {
         <StoreHeader />
 
         <div className="mb-9 flex flex-wrap gap-3">
+          <Link
+            className="rounded-full border border-[rgba(95,63,42,0.1)] bg-[#2f241f] px-4 py-2.5 font-bold text-[#fff8f0] no-underline"
+            to="/cua-hang"
+          >
+            Cua hang
+          </Link>
           <a
             className="rounded-full border border-[rgba(95,63,42,0.1)] bg-white/75 px-4 py-2.5 no-underline"
             href="#danh-muc"
@@ -219,12 +225,12 @@ function Home() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <a
-                href="#noi-bat"
+              <Link
+                to="/cua-hang"
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#2f241f] px-5 font-bold text-[#fff8f0] no-underline"
               >
                 Kham pha san pham
-              </a>
+              </Link>
               <a
                 href="#moi-nhat"
                 className="inline-flex min-h-12 items-center justify-center rounded-full border border-[rgba(95,63,42,0.18)] bg-white/80 px-5 font-bold no-underline"

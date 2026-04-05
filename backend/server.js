@@ -10,6 +10,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const homeRoutes = require("./routes/homeRoutes");
 const shopRoutes = require("./routes/shopRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
+const browseRoutes = require("./routes/browseRoutes");
 const requestLogger = require("./middlewares/requestLogger");
 
 const app = express();
@@ -31,6 +32,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/home", homeRoutes);
 app.use("/api/shop", shopRoutes);
 app.use("/api/uploads", uploadRoutes);
+app.use("/api/browse", browseRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

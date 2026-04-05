@@ -6,6 +6,7 @@ import Login from "./pages/login/Login";
 import Home from "./pages/home/Home";
 import MomoReturn from "./pages/momo-return/MomoReturn";
 import ProductDetail from "./pages/product-detail/ProductDetail";
+import Shop from "./pages/shop/Shop";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/gio-hang" element={<Cart />} />
         <Route path="/thanh-toan/momo" element={<MomoReturn />} />
         <Route path="/san-pham/:slug" element={<ProductDetail />} />
+        <Route path="/cua-hang" element={<Shop />} />
         <Route path="/danh-muc/:slug" element={<CategoryProducts />} />
         <Route path="/" element={<Home />} />
       </Routes>
