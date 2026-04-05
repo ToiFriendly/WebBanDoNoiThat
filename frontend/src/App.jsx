@@ -30,6 +30,7 @@ function App() {
 
         <Route path="/lien-he" element={<ContactSupport />} />
         <Route path="/ho-tro" element={<SupportCenter />} />
+        <Route path="/ho-so" element={<Profile />} />
 
         <Route path="/" element={<Home />} />
       </Routes>
