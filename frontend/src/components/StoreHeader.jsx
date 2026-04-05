@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   API_BASE_URL,
+  clearStoredSession,
   getStoredSessionUser,
   getStoredToken,
 } from "../utils/storefront";
 
 function StoreHeader() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [sessionUser, setSessionUser] = useState(() => getStoredSessionUser());
   const [cartCount, setCartCount] = useState(0);
+  const displayName = sessionUser?.fullName || sessionUser?.username || "Tai khoan";
 
   function getNavClass(pathname) {
     const isActive = location.pathname === pathname;
@@ -37,6 +40,13 @@ function StoreHeader() {
       window.removeEventListener("auth-session-changed", syncHeaderState);
     };
   }, []);
+
+  function handleLogout() {
+    clearStoredSession();
+    setSessionUser(null);
+    setCartCount(0);
+    navigate("/login");
+  }
 
   useEffect(() => {
     async function fetchCartCount() {
@@ -135,23 +145,33 @@ function StoreHeader() {
           </>
         ) : null}
         {sessionUser?.role === "admin" ? (
-          <Link
-            to="/admin"
-            className={getNavClass("/admin")}
-          >
+          <Link to="/admin" className={getNavClass("/admin")}>
             Quản trị
           </Link>
         ) : null}
-        <Link
-          to="/login"
-          className={`rounded-full px-4 py-2.5 no-underline max-md:w-full ${
-            sessionUser
-              ? "bg-[#2f241f] font-bold text-[#fff8f0]"
-              : "border border-[rgba(95,63,42,0.1)] bg-white/75"
-          }`}
-        >
-          {sessionUser ? sessionUser.fullName || sessionUser.username : "Dang nhap"}
-        </Link>
+        {sessionUser ? (
+          <Link className={getNavClass("/ho-so")} to="/ho-so">
+            Hồ sơ
+          </Link>
+        ) : null}
+        {sessionUser ? (
+          <button
+            type="button"
+            className="rounded-full bg-[#2f241f] px-4 py-2.5 font-bold text-[#fff8f0] max-md:w-full"
+            onClick={handleLogout}
+            title="Bam de dang xuat"
+            aria-label="Dang xuat"
+          >
+            {displayName}
+          </button>
+        ) : (
+          <Link
+            to="/login"
+            className="rounded-full border border-[rgba(95,63,42,0.1)] bg-white/75 px-4 py-2.5 no-underline max-md:w-full"
+          >
+            Dang nhap
+          </Link>
+        )}
       </nav>
     </header>
   );

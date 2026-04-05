@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Navigate, Routes, Route } from "react-router-dom";
+import Admin from "./pages/admin/AdminDashboard";
 import Admin from "./pages/admin/Admin";
 import Browse from "./pages/browse/Browse";
 import Cart from "./pages/cart/Cart";
@@ -9,6 +10,7 @@ import Home from "./pages/home/Home";
 import MomoReturn from "./pages/momo-return/MomoReturn";
 import OrderTracking from "./pages/order-tracking/OrderTracking";
 import ProductDetail from "./pages/product-detail/ProductDetail";
+import Profile from "./pages/profile/Profile";
 import Products from "./pages/products/Products";
 import SupportCenter from "./pages/support-center/SupportCenter";
 
@@ -26,8 +28,11 @@ function App() {
         <Route path="/san-pham/:slug" element={<ProductDetail />} />
         <Route path="/danh-muc" element={<Browse />} />
         <Route path="/danh-muc/:slug" element={<CategoryProducts />} />
+
         <Route path="/lien-he" element={<ContactSupport />} />
         <Route path="/ho-tro" element={<SupportCenter />} />
+        <Route path="/ho-so" element={<Profile />} />
+
         <Route path="/" element={<Home />} />
       </Routes>
     </Router>
