@@ -85,51 +85,65 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Prepare remote deployment directory
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          port: ${{ secrets.SERVER_PORT }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          script_stop: true
-          script: |
-            mkdir -p "${{ env.APP_DIR }}/backend"
+      - name: Install SSH tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
 
-      - name: Upload compose file
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          port: ${{ secrets.SERVER_PORT }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          source: docker-compose.yml
-          target: ${{ env.APP_DIR }}
+      - name: Prepare deployment bundle
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          BACKEND_ENV_FILE: ${{ secrets.BACKEND_ENV_FILE }}
+        run: |
+          set -eu
+          rm -rf .deploy .deploy.tar.gz
+          mkdir -p .deploy/backend
+
+          cp docker-compose.yml .deploy/docker-compose.yml
+
+          cat > .deploy/.env <<EOF
+          DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME}
+          IMAGE_TAG=${GITHUB_SHA}
+          EOF
+
+          printf '%s' "${BACKEND_ENV_FILE}" > .deploy/backend/.env
+          printf '%s' "${DOCKERHUB_TOKEN}" > .deploy/dockerhub.token
+
+          tar -czf .deploy.tar.gz -C .deploy .
+
+      - name: Upload deployment bundle
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+        run: |
+          set -eu
+          SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+
+          sshpass -p "${SERVER_PASSWORD}" ssh ${SSH_OPTS} -p "${SERVER_PORT}" "${SERVER_USERNAME}@${SERVER_HOST}" \
+            "mkdir -p '${APP_DIR}' '${APP_DIR}/backend'"
+
+          sshpass -p "${SERVER_PASSWORD}" scp ${SSH_OPTS} -P "${SERVER_PORT}" .deploy.tar.gz \
+            "${SERVER_USERNAME}@${SERVER_HOST}:/tmp/webbandonoithat-deploy.tar.gz"
+
+          sshpass -p "${SERVER_PASSWORD}" ssh ${SSH_OPTS} -p "${SERVER_PORT}" "${SERVER_USERNAME}@${SERVER_HOST}" \
+            "tar -xzf /tmp/webbandonoithat-deploy.tar.gz -C '${APP_DIR}' && rm -f /tmp/webbandonoithat-deploy.tar.gz"
 
       - name: Deploy containers
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          port: ${{ secrets.SERVER_PORT }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          script_stop: true
-          script: |
-            set -eu
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        run: |
+          set -eu
+          SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
-            cat > "${{ env.APP_DIR }}/.env" <<EOF
-            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-            IMAGE_TAG=${{ github.sha }}
-            EOF
+          sshpass -p "${SERVER_PASSWORD}" ssh ${SSH_OPTS} -p "${SERVER_PORT}" "${SERVER_USERNAME}@${SERVER_HOST}" \
+            "docker login -u '${DOCKERHUB_USERNAME}' --password-stdin" < .deploy/dockerhub.token
 
-            cat > "${{ env.APP_DIR }}/backend/.env" <<'EOF'
-            ${{ secrets.BACKEND_ENV_FILE }}
-            EOF
-
-            printf '%s\n' "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-            cd "${{ env.APP_DIR }}"
-            docker compose pull
-            docker compose up -d --remove-orphans
-            docker image prune -af
-            docker compose ps
+          sshpass -p "${SERVER_PASSWORD}" ssh ${SSH_OPTS} -p "${SERVER_PORT}" "${SERVER_USERNAME}@${SERVER_HOST}" \
+            "set -eu; cd '${APP_DIR}'; docker compose pull; docker compose up -d --remove-orphans; docker image prune -af; docker compose ps"
