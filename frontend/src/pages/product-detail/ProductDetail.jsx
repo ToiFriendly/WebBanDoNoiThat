@@ -6,6 +6,9 @@ import {
   API_BASE_URL,
   fetchJson,
   formatCurrency,
+  requestAuthJson,
+  emitCartChanged,
+  getStoredSessionUser,
 } from "../../utils/storefront";
 
 function getValidImages(images = []) {
@@ -31,6 +34,36 @@ function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [cartFeedback, setCartFeedback] = useState({ type: "", message: "" });
+  const sessionUser = getStoredSessionUser();
+
+  async function handleAddToCart() {
+    if (!product || addingToCart) return;
+
+    try {
+      setAddingToCart(true);
+      setCartFeedback({ type: "", message: "" });
+      await requestAuthJson(`${API_BASE_URL}/api/shop/cart/items`, {
+        method: "POST",
+        body: { productId: product._id, quantity },
+      });
+      emitCartChanged();
+      setCartFeedback({
+        type: "success",
+        message: `Đã thêm ${quantity} "${product.name}" vào giỏ hàng!`,
+      });
+      setQuantity(1);
+    } catch (err) {
+      setCartFeedback({
+        type: "error",
+        message: err.message || "Không thể thêm vào giỏ hàng.",
+      });
+    } finally {
+      setAddingToCart(false);
+    }
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -251,7 +284,7 @@ function ProductDetail() {
               <hr className="pd-divider" />
 
               <div className="pd-purchase">
-                <div className="pd-purchase__eyebrow">Tình trạng sản phẩm</div>
+                <div className="pd-purchase__eyebrow">Mua hàng</div>
                 <div className="pd-purchase__body">
                   <div>
                     <div className="pd-purchase__stock">
@@ -259,20 +292,108 @@ function ProductDetail() {
                         ? `Còn ${product.quantityInStock} sản phẩm trong kho`
                         : "Sản phẩm hiện đang tạm hết hàng"}
                     </div>
-                    <p className="pd-purchase__note">
-                      Luồng giỏ hàng đã được gỡ khỏi giao diện này. Bạn có thể tiếp
-                      tục xem thông tin sản phẩm hoặc mở khu vực theo dõi đơn hàng.
-                    </p>
+
+                    {cartFeedback.message && (
+                      <p
+                        className="pd-purchase__feedback"
+                        style={{
+                          color: cartFeedback.type === "success" ? "#2f7f41" : "#91412a",
+                          background: cartFeedback.type === "success"
+                            ? "rgba(50, 135, 72, 0.08)"
+                            : "rgba(176, 61, 40, 0.06)",
+                          borderRadius: "12px",
+                          padding: "0.65rem 1rem",
+                          margin: "0.75rem 0 0",
+                          fontSize: "0.88rem",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {cartFeedback.message}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="pd-purchase__actions">
-                    <Link className="pd-purchase__primary" to="/san-pham">
-                      Xem thêm sản phẩm
-                    </Link>
-                    <Link className="pd-purchase__secondary" to="/theo-doi-don">
-                      Theo dõi đơn hàng
-                    </Link>
-                  </div>
+                  {sessionUser ? (
+                    <div className="pd-purchase__actions">
+                      {product.quantityInStock > 0 && (
+                        <>
+                          <div className="pd-purchase__qty">
+                            <button
+                              type="button"
+                              className="pd-purchase__qty-btn"
+                              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                              disabled={addingToCart || quantity <= 1}
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              className="pd-purchase__qty-input"
+                              min="1"
+                              max={product.quantityInStock}
+                              value={quantity}
+                              onChange={(e) =>
+                                setQuantity(
+                                  Math.max(1, Math.min(product.quantityInStock, Number(e.target.value) || 1))
+                                )
+                              }
+                              disabled={addingToCart}
+                            />
+                            <button
+                              type="button"
+                              className="pd-purchase__qty-btn"
+                              onClick={() =>
+                                setQuantity((q) => Math.min(product.quantityInStock, q + 1))
+                              }
+                              disabled={addingToCart || quantity >= product.quantityInStock}
+                            >
+                              +
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            className="pd-purchase__primary"
+                            onClick={handleAddToCart}
+                            disabled={addingToCart}
+                          >
+                            {addingToCart ? (
+                              <>
+                                <span className="pd-purchase__spinner" />
+                                Đang thêm...
+                              </>
+                            ) : (
+                              <>
+                                <svg
+                                  width="18"
+                                  height="18"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                                  <line x1="3" y1="6" x2="21" y2="6" />
+                                  <path d="M16 10a4 4 0 0 1-8 0" />
+                                </svg>
+                                Thêm vào giỏ hàng
+                              </>
+                            )}
+                          </button>
+                        </>
+                      )}
+                      <Link className="pd-purchase__secondary" to="/gio-hang">
+                        Xem giỏ hàng
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="pd-purchase__actions">
+                      <Link className="pd-purchase__primary" to="/login">
+                        Đăng nhập để mua hàng
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
 

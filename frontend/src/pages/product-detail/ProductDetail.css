@@ -379,12 +379,96 @@
 .pd-purchase__primary {
   background: linear-gradient(135deg, #3a2a20, #5c4030);
   color: #fff8f0;
+  gap: 0.5rem;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pd-purchase__primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(47, 36, 31, 0.25);
 }
 
 .pd-purchase__secondary {
   border: 1px solid rgba(95, 63, 42, 0.14);
   background: #fff;
   color: #433128;
+}
+
+/* Quantity selector */
+.pd-purchase__qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pd-purchase__qty-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(95, 63, 42, 0.16);
+  border-radius: 999px;
+  background: #fff;
+  color: #6b5345;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.pd-purchase__qty-btn:hover:not(:disabled) {
+  background: #f3e5d7;
+  border-color: rgba(95, 63, 42, 0.28);
+}
+
+.pd-purchase__qty-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pd-purchase__qty-input {
+  width: 52px;
+  height: 38px;
+  border: 1px solid rgba(95, 63, 42, 0.16);
+  border-radius: 999px;
+  background: #fff;
+  color: #2f241f;
+  text-align: center;
+  font-weight: 600;
+  font: inherit;
+  outline: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.pd-purchase__qty-input::-webkit-inner-spin-button,
+.pd-purchase__qty-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pd-purchase__qty-input:focus {
+  border-color: #a4744e;
+  box-shadow: 0 0 0 3px rgba(164, 116, 78, 0.12);
+}
+
+/* Spinner */
+.pd-purchase__spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 0.35rem;
+  border: 2px solid rgba(255, 250, 244, 0.35);
+  border-top-color: #fffaf4;
+  border-radius: 999px;
+  animation: spin 0.8s linear infinite;
+}
+
+.pd-purchase__primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ===== SPECS GRID ===== */
