@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Navigate, Routes, Route } from "react-router-dom";
+import Admin from "./pages/admin/AdminDashboard";
 import Admin from "./pages/admin/Admin";
 import Browse from "./pages/browse/Browse";
 import Cart from "./pages/cart/Cart";
@@ -30,6 +31,7 @@ function App() {
 
         <Route path="/lien-he" element={<ContactSupport />} />
         <Route path="/ho-tro" element={<SupportCenter />} />
+        <Route path="/ho-so" element={<Profile />} />
 
         <Route path="/" element={<Home />} />
       </Routes>
