@@ -4,6 +4,7 @@ const {
   checkout,
   clearCartItems,
   getCart,
+  listOrders,
   getOrderDetail,
   handleMomoPaymentResult,
   removeCartItem,
@@ -24,6 +25,7 @@ router.patch("/cart/items/:productId", updateCartItem);
 router.delete("/cart/items/:productId", removeCartItem);
 router.delete("/cart", clearCartItems);
 router.post("/checkout", checkout);
+router.get("/orders", listOrders);
 router.get("/orders/:orderCode", getOrderDetail);
 
 module.exports = router;

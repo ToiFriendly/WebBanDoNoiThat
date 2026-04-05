@@ -1,10 +1,21 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { API_BASE_URL, getStoredSessionUser, requestAuthJson } from "../utils/storefront";
 
 function StoreHeader() {
+  const location = useLocation();
   const [sessionUser, setSessionUser] = useState(() => getStoredSessionUser());
   const [cartCount, setCartCount] = useState(0);
+
+  function getNavClass(pathname) {
+    const isActive = location.pathname === pathname;
+
+    return `rounded-full border px-4 py-2.5 no-underline transition ${
+      isActive
+        ? "border-[rgba(191,117,60,0.18)] bg-[#f6e7d8] font-semibold text-[#2f241f]"
+        : "border-[rgba(95,63,42,0.1)] bg-white/75 text-[#5f4a3d]"
+    } max-md:w-full`;
+  }
 
   useEffect(() => {
     async function syncHeaderState() {
@@ -47,32 +58,23 @@ function StoreHeader() {
       </Link>
 
       <nav className="flex flex-wrap gap-3 max-md:w-full">
-        <Link
-          className="rounded-full border border-[rgba(95,63,42,0.1)] bg-white/75 px-4 py-2.5 no-underline max-md:w-full"
-          to="/"
-        >
-          Trang chu
+        <Link className={getNavClass("/")} to="/">
+          Trang chủ
         </Link>
-        <Link
-          className="rounded-full border border-[rgba(95,63,42,0.1)] bg-white/75 px-4 py-2.5 no-underline max-md:w-full"
-          to="/san-pham"
-        >
-          San pham
+        <Link className={getNavClass("/san-pham")} to="/san-pham">
+          Sản phẩm
         </Link>
         {sessionUser?.role === "customer" ? (
-          <Link
-            className="rounded-full border border-[rgba(95,63,42,0.1)] bg-white/75 px-4 py-2.5 no-underline max-md:w-full"
-            to="/gio-hang"
-          >
-            Gio hang ({cartCount})
+          <Link className={getNavClass("/gio-hang")} to="/gio-hang">
+            Giỏ hàng ({cartCount})
           </Link>
         ) : null}
         {sessionUser?.role === "admin" ? (
           <Link
             to="/admin"
-            className="rounded-full border border-[rgba(95,63,42,0.1)] bg-[#f3e5d7] px-4 py-2.5 font-semibold no-underline max-md:w-full"
+            className={getNavClass("/admin")}
           >
-            Quan tri
+            Quản trị
           </Link>
         ) : null}
         <Link
