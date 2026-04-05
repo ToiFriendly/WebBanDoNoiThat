@@ -99,7 +99,8 @@ app.use("/api/uploads", uploadRoutes);
 app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(500).json({
-    message: "Internal server error."
+    message: "Internal server error.",
+    error: err.message || err.toString()
   });
 });
 
