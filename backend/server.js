@@ -14,30 +14,78 @@ const requestLogger = require("./middlewares/requestLogger");
 
 const app = express();
 const port = process.env.PORT || 5000;
-const defaultAllowedOrigins = [
+app.set("trust proxy", 1);
+
+function normalizeOrigin(value) {
+  if (!value) {
+    return "";
+  }
+
+  try {
+    return new URL(String(value).trim()).origin;
+  } catch {
+    return "";
+  }
+}
+
+const configuredAllowedOrigins = [
   process.env.CLIENT_URL,
+  process.env.SERVER_PUBLIC_URL,
+  process.env.FRONTEND_PUBLIC_URL,
+  process.env.APP_PUBLIC_URL,
+  ...(process.env.ALLOWED_ORIGINS || "").split(","),
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "http://localhost:5000",
   "http://127.0.0.1:5000"
-].filter(Boolean);
-const allowedOrigins = [...new Set(defaultAllowedOrigins)];
+]
+  .map(normalizeOrigin)
+  .filter(Boolean);
+const allowedOrigins = [...new Set(configuredAllowedOrigins)];
+
+function resolveRequestOrigin(req) {
+  const forwardedHost = req.get("x-forwarded-host");
+  const forwardedProto = req.get("x-forwarded-proto");
+  const host = forwardedHost || req.get("host");
+  const protocol = forwardedProto || req.protocol;
+
+  return host ? normalizeOrigin(`${protocol}://${host}`) : "";
+}
+
+function isAllowedOrigin(origin, req) {
+  if (!origin) {
+    return true;
+  }
+
+  const normalizedOrigin = normalizeOrigin(origin);
+  const requestOrigin = resolveRequestOrigin(req);
+
+  return Boolean(
+    normalizedOrigin &&
+      (allowedOrigins.includes(normalizedOrigin) ||
+        normalizedOrigin === requestOrigin)
+  );
+}
 
 app.use(requestLogger);
 app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+  cors((req, callback) => {
+    const origin = req.get("origin");
+    const originAllowed = isAllowedOrigin(origin, req);
 
-      return callback(new Error(`CORS blocked origin: ${origin}`));
-    }
+    callback(null, {
+      origin: originAllowed,
+      credentials: true
+    });
   })
 );
 app.use(express.json());
+
 app.get("/api/health", (_req, res) => {
-  res.status(200).json({ message: "Backend auth is running." });
+  res.status(200).json({
+    message: "Backend auth is running.",
+    allowedOrigins
+  });
 });
 
 app.use("/api/auth", authRoutes);
