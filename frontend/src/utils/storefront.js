@@ -62,6 +62,10 @@ export function emitSessionChanged() {
   window.dispatchEvent(new Event("auth-session-changed"));
 }
 
+export function emitCartChanged() {
+  window.dispatchEvent(new Event("cart-changed"));
+}
+
 export function formatCurrency(price) {
   if (typeof price !== "number") {
     return "Liên hệ";

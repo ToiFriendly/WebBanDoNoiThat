@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Navigate, Routes, Route } from "react-router-dom";
 import Admin from "./pages/admin/Admin";
+import Cart from "./pages/cart/Cart";
 import CategoryProducts from "./pages/category-products/CategoryProducts";
 import ContactSupport from "./pages/contact-support/ContactSupport";
 import Login from "./pages/login/Login";
@@ -15,7 +16,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={<Admin />} />
-        <Route path="/gio-hang" element={<Navigate to="/theo-doi-don" replace />} />
+        <Route path="/gio-hang" element={<Cart />} />
         <Route path="/lich-su-don" element={<Navigate to="/theo-doi-don" replace />} />
         <Route path="/theo-doi-don" element={<OrderTracking />} />
         <Route path="/thanh-toan/momo" element={<MomoReturn />} />
