@@ -30,13 +30,13 @@ COPY . .
 # Đổi quyền sở hữu
 RUN chown -R appuser:appgroup /app
 
+# Health check - install wget first (requires root)
+RUN apk add --no-cache wget
+
 USER appuser
 
 # Expose port
 EXPOSE 5000
-
-# Health check - install wget first
-RUN apk add --no-cache wget
 
 HEALTHCHECK --interval=15s --timeout=10s --start-period=90s --retries=5 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:5000/api/health || exit 1
