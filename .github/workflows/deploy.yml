@@ -1,0 +1,95 @@
+# ============================================
+# GitHub Actions CI/CD Pipeline
+# Build Docker Images → Push to Docker Hub → Deploy to Server
+# ============================================
+
+name: CI/CD Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  # Cho phép chạy thủ công từ tab Actions
+  workflow_dispatch:
+
+env:
+  BACKEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/webbandoNoiThat-backend
+  FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/webbandoNoiThat-frontend
+
+jobs:
+  # ============================================
+  # Job 1: Build & Push Docker Images
+  # ============================================
+  build-and-push:
+    name: 🐳 Build & Push Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+      # Bước 1: Checkout code từ repo
+      - name: ✅ Checkout source code
+        uses: actions/checkout@v4
+
+      # Bước 2: Setup Docker Buildx (hỗ trợ build đa nền tảng)
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Bước 3: Đăng nhập Docker Hub
+      - name: 🔐 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Bước 4: Build và push Backend image
+      - name: 🏗️ Build & Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:latest
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Bước 5: Build và push Frontend image
+      - name: 🏗️ Build & Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:latest
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          build-args: |
+            VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================
+  # Job 2: Deploy lên Server (Windows Server)
+  # ============================================
+  deploy:
+    name: 🚀 Deploy to Production Server
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      # Deploy qua SSH bằng PowerShell (Windows Server)
+      - name: 🚀 Deploy to Windows Server via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            cd C:\app\WebBanDoNoiThat
+            docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -f
+            echo "Deployment completed successfully!"
