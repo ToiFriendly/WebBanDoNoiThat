@@ -7,6 +7,7 @@ import Home from "./pages/home/Home";
 import MomoReturn from "./pages/momo-return/MomoReturn";
 import OrderTracking from "./pages/order-tracking/OrderTracking";
 import ProductDetail from "./pages/product-detail/ProductDetail";
+import Profile from "./pages/profile/Profile";
 import Products from "./pages/products/Products";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/san-pham" element={<Products />} />
         <Route path="/san-pham/:slug" element={<ProductDetail />} />
         <Route path="/danh-muc/:slug" element={<CategoryProducts />} />
+        <Route path="/ho-so" element={<Profile />} />
         <Route path="/" element={<Home />} />
       </Routes>
     </Router>
