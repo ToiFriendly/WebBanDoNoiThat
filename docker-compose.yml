@@ -5,7 +5,7 @@
 services:
   # Backend API (Node.js/Express)
   backend:
-    image: ${DOCKERHUB_USERNAME}/webbandoNoiThat-backend:latest
+    image: ${DOCKERHUB_USERNAME}/webbandonoithat-backend:latest
     container_name: noithat-backend
     restart: always
     ports:
@@ -23,7 +23,7 @@ services:
 
   # Frontend (React/Vite + Nginx)
   frontend:
-    image: ${DOCKERHUB_USERNAME}/webbandoNoiThat-frontend:latest
+    image: ${DOCKERHUB_USERNAME}/webbandonoithat-frontend:latest
     container_name: noithat-frontend
     restart: always
     ports:
