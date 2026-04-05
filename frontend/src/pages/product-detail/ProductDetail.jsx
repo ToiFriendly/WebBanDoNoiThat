@@ -1,41 +1,37 @@
+import "./ProductDetail.css";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import StoreHeader from "../../components/StoreHeader";
 import CustomerReviewsSection from "./CustomerReviewsSection";
 import {
   API_BASE_URL,
-  emitCartChanged,
   fetchJson,
   formatCurrency,
-  getDisplayImage,
-  getStoredSessionUser,
-  requestAuthJson,
 } from "../../utils/storefront";
 
-function InfoBlock({ label, value }) {
-  if (!value) {
-    return null;
-  }
+function getValidImages(images = []) {
+  return images.filter(
+    (img) => img && typeof img === "string" && !img.includes("placehold.co"),
+  );
+}
+
+function SpecItem({ label, value }) {
+  if (!value) return null;
 
   return (
-    <div className="rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/70 p-4">
-      <div className="text-xs tracking-[0.12em] text-[#8b6243] uppercase">
-        {label}
-      </div>
-      <div className="mt-2 text-base font-semibold">{value}</div>
+    <div className="pd-spec">
+      <div className="pd-spec__label">{label}</div>
+      <div className="pd-spec__value">{value}</div>
     </div>
   );
 }
 
 function ProductDetail() {
-  const navigate = useNavigate();
   const { slug } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [cartSubmitting, setCartSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState("");
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -44,13 +40,12 @@ function ProductDetail() {
       try {
         setLoading(true);
         setError("");
-        setFeedback("");
 
         const data = await fetchJson(`${API_BASE_URL}/api/home/products/${slug}`);
 
         if (isMounted) {
           setProduct(data.product || null);
-          setQuantity(1);
+          setActiveImageIndex(0);
         }
       } catch (loadError) {
         if (isMounted) {
@@ -64,28 +59,26 @@ function ProductDetail() {
     }
 
     loadProduct();
+    window.scrollTo({ top: 0, behavior: "smooth" });
 
     return () => {
       isMounted = false;
     };
   }, [slug]);
 
-  const image = product ? getDisplayImage(product.images) : "";
+  const validImages = product ? getValidImages(product.images) : [];
+  const activeImage = validImages[activeImageIndex] || "";
   const dimensions = product?.dimensions || {};
   const dimensionText =
     dimensions.length || dimensions.width || dimensions.height
-      ? `${dimensions.length || 0} x ${dimensions.width || 0} x ${dimensions.height || 0} ${dimensions.unit || "cm"}`
+      ? `${dimensions.length || 0} × ${dimensions.width || 0} × ${dimensions.height || 0} ${dimensions.unit || "cm"}`
       : "";
 
-  async function handleAddToCart() {
-    if (!product) {
-      return;
-    }
-
-    if (!getStoredSessionUser()) {
-      navigate("/login");
-      return;
-    }
+  const hasDiscount =
+    product?.compareAtPrice && product.compareAtPrice > product.price;
+  const discountPercent = hasDiscount
+    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
+    : 0;
 
     try {
       setCartSubmitting(true);
@@ -109,8 +102,8 @@ function ProductDetail() {
   }
 
   return (
-    <main className="min-h-screen px-3 py-4 text-[#2f241f] md:px-6 md:py-6">
-      <section className="mx-auto w-full max-w-[1180px] rounded-[32px] border border-[rgba(95,63,42,0.12)] bg-[rgba(255,251,245,0.82)] p-5 shadow-[0_20px_60px_rgba(79,52,35,0.08)] md:p-6">
+    <main className="pd-page">
+      <section className="pd-container">
         <StoreHeader />
 
         <div className="mb-8 flex flex-wrap items-center gap-2 text-sm text-[#8c6a4c]">
@@ -132,13 +125,33 @@ function ProductDetail() {
           {product?.name ? <span>{product.name}</span> : null}
         </div>
 
+        {/* States */}
         {loading ? (
           <div className="rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 p-6">
             Đang tải chi tiết sản phẩm...
           </div>
         ) : error ? (
-          <div className="rounded-3xl border border-[rgba(95,63,42,0.1)] bg-white/75 p-6 text-[#8a3d2f]">
-            {error}
+          <div className="pd-error">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <p>{error}</p>
+            <Link
+              to="/san-pham"
+              style={{
+                padding: "0.6rem 1.5rem",
+                borderRadius: "999px",
+                background: "#2f241f",
+                color: "#fff8f0",
+                textDecoration: "none",
+                fontWeight: 600,
+                fontSize: "0.9rem",
+              }}
+            >
+              Quay lại danh sách
+            </Link>
           </div>
         ) : product ? (
           <>
@@ -264,18 +277,20 @@ function ProductDetail() {
                 </p>
               </div>
 
-              {product.tags?.length ? (
-                <div className="flex flex-wrap gap-3">
+              {/* Tags */}
+              {product.tags?.length > 0 && (
+                <div className="pd-tags">
                   {product.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-[rgba(95,63,42,0.14)] bg-white/80 px-4 py-2 text-sm"
-                    >
+                    <span key={tag} className="pd-tag">
+                      <svg className="pd-tag__icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                        <line x1="7" y1="7" x2="7.01" y2="7" />
+                      </svg>
                       {tag}
                     </span>
                   ))}
                 </div>
-              ) : null}
+              )}
             </div>
           </>
         ) : null}

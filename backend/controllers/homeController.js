@@ -1,6 +1,20 @@
 const Category = require("../schemas/category");
 const Product = require("../schemas/product");
 
+function parsePositiveInteger(value, fallbackValue) {
+  const parsedValue = Number.parseInt(value, 10);
+
+  if (Number.isFinite(parsedValue) && parsedValue > 0) {
+    return parsedValue;
+  }
+
+  return fallbackValue;
+}
+
+function escapeRegex(value = "") {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function mapCategory(category) {
   return {
     _id: category._id,
@@ -110,6 +124,13 @@ async function getProductDetail(req, res, next) {
 
 async function getCategoryProducts(req, res, next) {
   try {
+    const searchQuery =
+      typeof req.query.q === "string" ? req.query.q.trim() : "";
+    const requestedPage = parsePositiveInteger(req.query.page, 1);
+    const requestedLimit = Math.min(parsePositiveInteger(req.query.limit, 6), 24);
+    const searchRegex = searchQuery
+      ? new RegExp(escapeRegex(searchQuery), "i")
+      : null;
     const category = await Category.findOne({
       slug: req.params.slug,
       isActive: true,
@@ -120,17 +141,102 @@ async function getCategoryProducts(req, res, next) {
       return res.status(404).json({ message: "Khong tim thay danh muc." });
     }
 
-    const products = await Product.find({
+    const baseProductFilter = {
       category: category._id,
       status: "active",
       isDeleted: false
-    })
+    };
+    const productFilter = searchQuery
+      ? {
+          ...baseProductFilter,
+          $or: [
+            { name: searchRegex },
+            { sku: searchRegex },
+            { shortDescription: searchRegex },
+            { material: searchRegex },
+            { style: searchRegex },
+            { color: searchRegex },
+            { tags: searchRegex }
+          ]
+        }
+      : baseProductFilter;
+    const [categoryProductCount, matchingProductCount] = await Promise.all([
+      Product.countDocuments(baseProductFilter),
+      Product.countDocuments(productFilter)
+    ]);
+    const totalPages = Math.max(
+      Math.ceil(matchingProductCount / requestedLimit),
+      1
+    );
+    const currentPage = Math.min(requestedPage, totalPages);
+    const products = await Product.find(productFilter)
       .populate("category", "name slug")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip((currentPage - 1) * requestedLimit)
+      .limit(requestedLimit);
 
     return res.status(200).json({
       category: mapCategory(category),
-      products: products.map(mapProduct)
+      products: products.map(mapProduct),
+      filters: {
+        q: searchQuery
+      },
+      totals: {
+        categoryProducts: categoryProductCount,
+        matchingProducts: matchingProductCount
+      },
+      pagination: {
+        page: currentPage,
+        limit: requestedLimit,
+        totalItems: matchingProductCount,
+        totalPages,
+        hasPreviousPage: currentPage > 1,
+        hasNextPage: currentPage < totalPages
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getAllProducts(req, res, next) {
+  try {
+    const searchQuery =
+      typeof req.query.q === "string" ? req.query.q.trim() : "";
+    const requestedPage = parsePositiveInteger(req.query.page, 1);
+    const requestedLimit = Math.min(parsePositiveInteger(req.query.limit, 12), 24);
+    const searchRegex = searchQuery
+      ? new RegExp(escapeRegex(searchQuery), "i")
+      : null;
+
+    const baseFilter = {
+      status: "active",
+      isDeleted: false
+    };
+    const productFilter = searchRegex
+      ? { ...baseFilter, name: searchRegex }
+      : baseFilter;
+
+    const totalItems = await Product.countDocuments(productFilter);
+    const totalPages = Math.max(Math.ceil(totalItems / requestedLimit), 1);
+    const currentPage = Math.min(requestedPage, totalPages);
+
+    const products = await Product.find(productFilter)
+      .populate("category", "name slug")
+      .sort({ createdAt: -1 })
+      .skip((currentPage - 1) * requestedLimit)
+      .limit(requestedLimit);
+
+    return res.status(200).json({
+      products: products.map(mapProduct),
+      pagination: {
+        page: currentPage,
+        limit: requestedLimit,
+        totalItems,
+        totalPages,
+        hasPreviousPage: currentPage > 1,
+        hasNextPage: currentPage < totalPages
+      }
     });
   } catch (error) {
     return next(error);
@@ -140,5 +246,6 @@ async function getCategoryProducts(req, res, next) {
 module.exports = {
   getHomeData,
   getProductDetail,
-  getCategoryProducts
+  getCategoryProducts,
+  getAllProducts
 };

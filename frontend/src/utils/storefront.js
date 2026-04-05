@@ -1,5 +1,34 @@
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+function resolveApiBaseUrl() {
+  const configuredBaseUrl = String(import.meta.env.VITE_API_BASE_URL || "").trim();
+
+  if (!configuredBaseUrl) {
+    if (typeof window !== "undefined") {
+      return `${window.location.protocol}//${window.location.hostname}:5000`;
+    }
+
+    return "http://localhost:5000";
+  }
+
+  try {
+    const parsedUrl = new URL(configuredBaseUrl);
+    const isLoopbackHost = ["localhost", "127.0.0.1"].includes(parsedUrl.hostname);
+    const browserHostname =
+      typeof window !== "undefined" ? window.location.hostname : "";
+
+    if (
+      isLoopbackHost &&
+      ["localhost", "127.0.0.1"].includes(browserHostname)
+    ) {
+      parsedUrl.hostname = browserHostname;
+    }
+
+    return parsedUrl.toString().replace(/\/$/, "");
+  } catch {
+    return configuredBaseUrl.replace(/\/$/, "");
+  }
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 const SESSION_STORAGE_KEY = "auth_demo_session";
 
 export function getStoredSession() {
@@ -31,10 +60,6 @@ export function clearStoredSession() {
 
 export function emitSessionChanged() {
   window.dispatchEvent(new Event("auth-session-changed"));
-}
-
-export function emitCartChanged() {
-  window.dispatchEvent(new Event("cart-changed"));
 }
 
 export function formatCurrency(price) {
