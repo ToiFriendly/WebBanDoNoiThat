@@ -117,7 +117,8 @@ async function startServer() {
     console.log("MongoDB connected successfully");
   } catch (error) {
     console.error("MongoDB connection failed:", error.message);
-    console.error("Server will continue running but database operations will fail");
+    console.error("Exiting process to allow Docker to restart and retry connection...");
+    process.exit(1);
   }
 }
 
