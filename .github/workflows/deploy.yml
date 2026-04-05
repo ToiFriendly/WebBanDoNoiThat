@@ -253,3 +253,17 @@ jobs:
 
           sshpass -p "${SERVER_PASSWORD}" ssh ${SSH_OPTS} -p "${SERVER_PORT}" "${SERVER_USERNAME}@${SERVER_HOST}" \
             "set -eu; cd '${APP_DIR}'; docker compose pull; docker compose up -d --remove-orphans; docker image prune -af; docker compose ps"
+
+      - name: Print backend logs on failure
+        if: failure()
+        env:
+          SERVER_HOST: ${{ env.SERVER_HOST_CLEAN }}
+          SERVER_PORT: ${{ env.SERVER_PORT_CLEAN }}
+          SERVER_USERNAME: ${{ env.SERVER_USERNAME_CLEAN }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+        run: |
+          set -eu
+          SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+
+          sshpass -p "${SERVER_PASSWORD}" ssh ${SSH_OPTS} -p "${SERVER_PORT}" "${SERVER_USERNAME}@${SERVER_HOST}" \
+            "cd '${APP_DIR}' && docker compose ps && echo '--- backend logs ---' && docker compose logs --tail=200 backend && echo '--- frontend logs ---' && docker compose logs --tail=100 frontend"
