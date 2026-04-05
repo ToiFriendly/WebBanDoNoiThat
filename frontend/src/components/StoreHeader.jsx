@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { getStoredSessionUser } from "../utils/storefront";
+import {
+  API_BASE_URL,
+  getStoredSessionUser,
+  getStoredToken,
+} from "../utils/storefront";
 
 function StoreHeader() {
   const location = useLocation();
   const [sessionUser, setSessionUser] = useState(() => getStoredSessionUser());
+  const [cartCount, setCartCount] = useState(0);
 
   function getNavClass(pathname) {
     const isActive = location.pathname === pathname;
@@ -33,6 +38,36 @@ function StoreHeader() {
     };
   }, []);
 
+  useEffect(() => {
+    async function fetchCartCount() {
+      const token = getStoredToken();
+      if (!token) {
+        setCartCount(0);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/shop/cart`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        setCartCount(data?.cart?.totalQuantity || 0);
+      } catch {
+        setCartCount(0);
+      }
+    }
+
+    fetchCartCount();
+
+    window.addEventListener("cart-changed", fetchCartCount);
+    window.addEventListener("auth-session-changed", fetchCartCount);
+
+    return () => {
+      window.removeEventListener("cart-changed", fetchCartCount);
+      window.removeEventListener("auth-session-changed", fetchCartCount);
+    };
+  }, []);
+
   return (
     <header className="mb-6 flex items-center justify-between gap-4 max-md:flex-col max-md:items-start">
       <Link
@@ -50,9 +85,51 @@ function StoreHeader() {
           Sản phẩm
         </Link>
         {sessionUser?.role === "customer" ? (
-          <Link className={getNavClass("/theo-doi-don")} to="/theo-doi-don">
-            Theo dõi đơn
-          </Link>
+          <>
+            <Link
+              className={`${getNavClass("/gio-hang")} relative`}
+              to="/gio-hang"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+                Giỏ hàng
+                {cartCount > 0 && (
+                  <span
+                    className="inline-flex items-center justify-center"
+                    style={{
+                      minWidth: "20px",
+                      height: "20px",
+                      padding: "0 5px",
+                      borderRadius: "999px",
+                      background: "linear-gradient(135deg, #d38a4d, #bb6d36)",
+                      color: "#fff",
+                      fontSize: "0.7rem",
+                      fontWeight: 700,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </span>
+                )}
+              </span>
+            </Link>
+            <Link className={getNavClass("/theo-doi-don")} to="/theo-doi-don">
+              Theo dõi đơn
+            </Link>
+          </>
         ) : null}
         {sessionUser?.role === "admin" ? (
           <Link
