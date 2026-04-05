@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Navigate, Routes, Route } from "react-router-dom";
-import Admin from "./pages/admin/Admin";
+import Admin from "./pages/admin/AdminDashboard";
 import Cart from "./pages/cart/Cart";
 import CategoryProducts from "./pages/category-products/CategoryProducts";
 import Login from "./pages/login/Login";
