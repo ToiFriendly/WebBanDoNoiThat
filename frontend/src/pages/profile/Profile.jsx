@@ -166,7 +166,7 @@ function Profile() {
               <p className="text-xs tracking-[0.16em] text-[#8b6243] uppercase">
                 Thông tin đăng ký hiện tại
               </p>
-              <h1 className="mt-3 text-3xl font-semibold">Cap nhat ho so</h1>
+              <h1 className="mt-3 text-3xl font-semibold">Cập nhật hồ sơ</h1>
               <p className="mt-3 max-w-[60ch] leading-7 text-[#5f4a3d]">
                 Bạn có thể chỉnh sửa username, email, họ tên và số điện thoại.
                 Dữ liệu sẽ được lưu vào tài khoản hiện tại.
@@ -244,7 +244,7 @@ function Profile() {
                     className="mt-2 inline-flex min-h-12 items-center justify-center rounded-full bg-[#2f241f] px-6 font-bold text-[#fff8f0] disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={saving || loading || !isDirty}
                   >
-                    {saving ? "Dang luu..." : "Luu thay doi"}
+                    {saving ? "Đang lưu..." : "Lưu thay đổi"}
                   </button>
                 </form>
               )}
